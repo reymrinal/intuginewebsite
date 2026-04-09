@@ -1,9 +1,6 @@
 "use client";
-import { useState } from "react";
 
 export default function Nav() {
-  const [menuOpen, setMenuOpen] = useState(false);
-
   return (
     <header style={{ background: "#fff", borderBottom: "1px solid #e5e7eb", position: "sticky", top: 0, zIndex: 50 }}>
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 1.5rem", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64 }}>
@@ -18,10 +15,10 @@ export default function Nav() {
 
         {/* Desktop Nav */}
         <nav style={{ display: "flex", alignItems: "center", gap: "2rem" }}>
-          {/* Library → main site homepage */}
+          {/* Library → stays on library subdomain */}
           <a
-            href="https://www.intugine.com"
-            style={{ color: "#374151", textDecoration: "none", fontSize: "0.9rem", fontWeight: 500 }}
+            href="https://library.intugine.com"
+            style={{ color: "#1a3c8f", textDecoration: "none", fontSize: "0.9rem", fontWeight: 600 }}
           >
             Library
           </a>
