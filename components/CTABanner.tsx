@@ -16,7 +16,7 @@ export default function CTABanner({ cta }: { cta?: string }) {
         Join 75+ global enterprises using Intugine for real-time supply chain visibility.
       </p>
       <a
-        href="https://www.intugine.com/#demo"
+        href="https://www.intugine.com/schedule-demo"
         style={{
           display: "inline-block",
           background: "#fff",
