@@ -1,25 +1,22 @@
-import { getAllPages } from "@/lib/api";
 import type { MetadataRoute } from "next";
-
-const BASE_URL = "https://www.intugine.com";
+import { getAllPages } from "@/lib/api";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const pages = await getAllPages();
+  const BASE = "https://library.intugine.com";
 
-  const pageEntries: MetadataRoute.Sitemap = pages.map(page => ({
-    url: `${BASE_URL}/library/${page.slug}`,
-    lastModified: new Date(),
-    changeFrequency: "weekly",
-    priority: page.priority === "high" ? 0.9 : page.priority === "medium" ? 0.7 : 0.5,
-  }));
-
-  return [
-    {
-      url: `${BASE_URL}/library`,
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 1.0,
-    },
-    ...pageEntries,
+  const entries: MetadataRoute.Sitemap = [
+    { url: BASE, lastModified: new Date(), changeFrequency: "weekly", priority: 1 },
   ];
+
+  for (const p of pages) {
+    entries.push({
+      url: `${BASE}/${p.slug}`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.8,
+    });
+  }
+
+  return entries;
 }
