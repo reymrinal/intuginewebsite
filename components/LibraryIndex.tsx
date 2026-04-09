@@ -3,39 +3,46 @@ import { useState } from "react";
 import PageCard from "@/components/PageCard";
 import type { SEOPage } from "@/lib/api";
 
+// Only the 3 active industries — expand this list as new verticals go live
+const ACTIVE_INDUSTRIES = ["Cement", "Freight Marketplace", "API Suite"];
+
 const INDUSTRY_COLORS: Record<string, string> = {
-  Cement: "#f59e0b",
-  FMCG: "#10b981",
-  Pharma: "#6366f1",
-  Auto: "#ef4444",
+  "Cement": "#f59e0b",
+  "Freight Marketplace": "#10b981",
+  "API Suite": "#6366f1",
   Default: "#1a3c8f",
 };
 
 const INDUSTRY_ICONS: Record<string, string> = {
-  Cement: "🏗️",
-  FMCG: "🛒",
-  Pharma: "💊",
-  Auto: "🚗",
+  "Cement": "🏗️",
+  "Freight Marketplace": "🚚",
+  "API Suite": "⚡",
   Default: "📦",
 };
 
+const INDUSTRY_SLUGS: Record<string, string> = {
+  "Cement": "cement",
+  "Freight Marketplace": "freight-marketplace",
+  "API Suite": "api-suite",
+};
+
 export default function LibraryIndex({ pages }: { pages: SEOPage[] }) {
-  const industries = [...new Set(pages.map((p) => p.industry).filter(Boolean))] as string[];
   const [activeIndustry, setActiveIndustry] = useState<string>("All");
 
-  const filteredPages =
+  // Build display list — filter by active tab
+  const visiblePages =
     activeIndustry === "All"
       ? pages
       : pages.filter((p) => p.industry === activeIndustry);
 
-  const byIndustry: Record<string, SEOPage[]> = {};
-  if (activeIndustry === "All") {
-    industries.forEach((ind) => {
-      byIndustry[ind] = pages.filter((p) => p.industry === ind);
-    });
-  } else {
-    byIndustry[activeIndustry] = filteredPages;
-  }
+  // Group by industry for "All" view, or show single section
+  const sections: { industry: string; pages: SEOPage[] }[] =
+    activeIndustry === "All"
+      ? ACTIVE_INDUSTRIES.map((ind) => ({
+          industry: ind,
+          pages: pages.filter((p) => p.industry === ind),
+        })).filter((s) => s.pages.length > 0)
+      : [{ industry: activeIndustry, pages: visiblePages }];
 
   return (
     <main>
@@ -78,22 +85,23 @@ export default function LibraryIndex({ pages }: { pages: SEOPage[] }) {
           </p>
         </div>
 
-        {/* Industry filter tabs — inside hero, flush at bottom */}
+        {/* Industry filter tabs */}
         <div
           style={{
             maxWidth: 1200,
             margin: "2.5rem auto 0",
             display: "flex",
             gap: "0.5rem",
-            overflowX: "auto",
-            paddingBottom: 0,
             justifyContent: "center",
             flexWrap: "wrap",
           }}
         >
-          {["All", ...industries].map((ind) => {
+          {/* All tab */}
+          {["All", ...ACTIVE_INDUSTRIES].map((ind) => {
             const isActive = activeIndustry === ind;
             const color = ind === "All" ? "#1a3c8f" : (INDUSTRY_COLORS[ind] || INDUSTRY_COLORS.Default);
+            const count = ind === "All" ? pages.length : pages.filter((p) => p.industry === ind).length;
+
             return (
               <button
                 key={ind}
@@ -111,25 +119,22 @@ export default function LibraryIndex({ pages }: { pages: SEOPage[] }) {
                   display: "flex",
                   alignItems: "center",
                   gap: "0.4rem",
-                  marginBottom: 0,
                 }}
               >
                 {ind !== "All" && <span>{INDUSTRY_ICONS[ind] || INDUSTRY_ICONS.Default}</span>}
                 {ind}
-                {ind !== "All" && (
-                  <span
-                    style={{
-                      background: isActive ? color : "rgba(255,255,255,0.25)",
-                      color: isActive ? "#fff" : "#fff",
-                      borderRadius: 10,
-                      padding: "0.1rem 0.45rem",
-                      fontSize: "0.72rem",
-                      fontWeight: 600,
-                    }}
-                  >
-                    {pages.filter((p) => p.industry === ind).length}
-                  </span>
-                )}
+                <span
+                  style={{
+                    background: isActive ? color : "rgba(255,255,255,0.25)",
+                    color: "#fff",
+                    borderRadius: 10,
+                    padding: "0.1rem 0.45rem",
+                    fontSize: "0.72rem",
+                    fontWeight: 600,
+                  }}
+                >
+                  {count}
+                </span>
               </button>
             );
           })}
@@ -137,13 +142,7 @@ export default function LibraryIndex({ pages }: { pages: SEOPage[] }) {
       </div>
 
       {/* Stats bar */}
-      <div
-        style={{
-          background: "#f8fafc",
-          borderBottom: "1px solid #e5e7eb",
-          padding: "1rem 1.5rem",
-        }}
-      >
+      <div style={{ background: "#f8fafc", borderBottom: "1px solid #e5e7eb", padding: "1rem 1.5rem" }}>
         <div
           style={{
             maxWidth: 1200,
@@ -155,8 +154,11 @@ export default function LibraryIndex({ pages }: { pages: SEOPage[] }) {
           }}
         >
           {[
-            { label: "Resources", value: filteredPages.length.toString() },
-            { label: "Industries", value: activeIndustry === "All" ? industries.length.toString() : "1" },
+            { label: "Resources", value: visiblePages.length.toString() },
+            {
+              label: "Industries",
+              value: activeIndustry === "All" ? ACTIVE_INDUSTRIES.length.toString() : "1",
+            },
             { label: "Avg. Reading Time", value: "5 min" },
           ].map((stat) => (
             <div key={stat.label} style={{ textAlign: "center" }}>
@@ -167,18 +169,11 @@ export default function LibraryIndex({ pages }: { pages: SEOPage[] }) {
         </div>
       </div>
 
-      {/* Content by industry */}
+      {/* Content sections */}
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "3rem 1.5rem" }}>
-        {Object.entries(byIndustry).map(([industry, indPages]) => (
+        {sections.map(({ industry, pages: indPages }) => (
           <section key={industry} id={industry} style={{ marginBottom: "3.5rem" }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.75rem",
-                marginBottom: "1.5rem",
-              }}
-            >
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.5rem" }}>
               <div
                 style={{
                   width: 4,
@@ -187,9 +182,9 @@ export default function LibraryIndex({ pages }: { pages: SEOPage[] }) {
                   borderRadius: 2,
                 }}
               />
-              <span style={{ fontSize: "1.4rem" }}>{INDUSTRY_ICONS[industry] || INDUSTRY_ICONS.Default}</span>
+              <span style={{ fontSize: "1.3rem" }}>{INDUSTRY_ICONS[industry] || INDUSTRY_ICONS.Default}</span>
               <h2 style={{ margin: 0, fontSize: "1.3rem", fontWeight: 700, color: "#0f2460" }}>
-                {industry} Logistics
+                {industry}
               </h2>
               <span
                 style={{
@@ -202,6 +197,19 @@ export default function LibraryIndex({ pages }: { pages: SEOPage[] }) {
               >
                 {indPages.length} resources
               </span>
+              {/* Deep-link to industry page */}
+              <a
+                href={`https://library.intugine.com/industry/${INDUSTRY_SLUGS[industry] || industry.toLowerCase()}`}
+                style={{
+                  marginLeft: "auto",
+                  color: INDUSTRY_COLORS[industry] || INDUSTRY_COLORS.Default,
+                  fontSize: "0.82rem",
+                  fontWeight: 600,
+                  textDecoration: "none",
+                }}
+              >
+                View all {industry} resources →
+              </a>
             </div>
             <div
               style={{
@@ -219,21 +227,8 @@ export default function LibraryIndex({ pages }: { pages: SEOPage[] }) {
       </div>
 
       {/* Bottom CTA */}
-      <div
-        style={{
-          background: "#f0f4ff",
-          padding: "3rem 1.5rem",
-          textAlign: "center",
-        }}
-      >
-        <h2
-          style={{
-            color: "#0f2460",
-            fontSize: "1.5rem",
-            fontWeight: 700,
-            marginBottom: "0.75rem",
-          }}
-        >
+      <div style={{ background: "#f0f4ff", padding: "3rem 1.5rem", textAlign: "center" }}>
+        <h2 style={{ color: "#0f2460", fontSize: "1.5rem", fontWeight: 700, marginBottom: "0.75rem" }}>
           Ready to see Intugine in action?
         </h2>
         <p style={{ color: "#6b7280", marginBottom: "1.5rem" }}>
