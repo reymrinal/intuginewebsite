@@ -10,6 +10,9 @@ const BASE_URL = "https://library.intugine.com";
 
 export const dynamicParams = true; // serve pages not pre-built at request time
 
+// Guard: don't try to render file extensions as pages (e.g. .xml, .txt)
+// These should be served from public/ as static files
+
 export async function generateStaticParams() {
   try {
     const pages = await getAllPages();
@@ -23,6 +26,8 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
+  // Don't render paths with file extensions — they should be static files
+  if (slug.includes('.')) notFound();
   const page = await getPageBySlug(slug);
   if (!page) return { title: "Not Found" };
 
@@ -55,6 +60,8 @@ const FUNNEL_COLORS: Record<string, string> = {
 
 export default async function PageDetail({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+  // Don't render paths with file extensions — they should be static files
+  if (slug.includes('.')) notFound();
   const page = await getPageBySlug(slug);
   if (!page) notFound();
 

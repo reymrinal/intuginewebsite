@@ -1,4 +1,4 @@
-import { getAllPages, getTemplateLabel } from "@/lib/api";
+import { getAllPages } from "@/lib/api";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import LibraryIndex from "@/components/LibraryIndex";
@@ -13,6 +13,10 @@ export default async function LibraryPage() {
   const pages = await getAllPages();
   return (
     <>
+      {/* Bing Webmaster Verification — must be in <head>, injected via Next.js head export */}
+      <head>
+        <meta name="msvalidate.01" content="626E83BC5451E2AD7D7884954C359F91" />
+      </head>
       <Nav />
       <LibraryIndex pages={pages} />
       <Footer />

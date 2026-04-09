@@ -1,0 +1,19 @@
+[
+  {
+    "id": "1",
+    "title": "What is Back-Unloading in Cement Logistics? | Intugine",
+    "slug": "what-is-back-unloading-cement-logistics",
+    "template_type": "glossary",
+    "target_keyword": "back unloading detection cement trucks",
+    "meta_title": "What is Back-Unloading in Cement Logistics? | Intugine",
+    "meta_description": "Back-unloading is when a cement truck delivers to an unauthorized location before or instead of the intended dealer.",
+    "industry": "Cement",
+    "persona": "CLO",
+    "funnel_stage": "TOFU",
+    "schema_markup": "FAQPage + DefinedTerm",
+    "status": "reviewed",
+    "full_content": "# What is Back-Unloading?\n\nTest content to verify routing works.",
+    "faq_block": "Q: What is back-unloading?",
+    "cta": "Book Demo"
+  }
+]
