@@ -1,3 +1,5 @@
+const BACKEND_URL = "https://rey-6011d59d.base44.app/functions/getDashboardData";
+
 export interface SEOPage {
   id: string;
   title: string;
@@ -18,38 +20,28 @@ export interface SEOPage {
   priority?: string;
 }
 
-const BASE44_API = "https://api.base44.com/api/apps/69c3668110c055bc6011d59d/entities/SEOPage";
-const API_KEY = process.env.BASE44_API_KEY || "";
-
 export async function getAllPages(): Promise<SEOPage[]> {
   try {
-    const res = await fetch(`${BASE44_API}?limit=500`, {
-      headers: { "x-api-key": API_KEY },
-      next: { revalidate: 3600 }, // ISR: refresh every hour
+    const res = await fetch(BACKEND_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+      next: { revalidate: 300 },
     });
-    if (!res.ok) throw new Error(`API error: ${res.status}`);
+    if (!res.ok) throw new Error(`Backend returned ${res.status}`);
     const data = await res.json();
-    return (data.records || []).filter((p: SEOPage) =>
-      p.slug && p.full_content && ["content_draft", "reviewed", "published"].includes(p.status || "")
-    );
+    const pages: SEOPage[] = data.pages || [];
+    // Only serve pages that have content and a slug
+    return pages.filter(p => p.slug && p.slug.trim() !== "");
   } catch (e) {
-    console.error("Failed to fetch pages:", e);
+    console.error("[getAllPages] Failed to fetch from backend:", e);
     return [];
   }
 }
 
 export async function getPageBySlug(slug: string): Promise<SEOPage | null> {
-  try {
-    const res = await fetch(`${BASE44_API}?slug=${encodeURIComponent(slug)}&limit=1`, {
-      headers: { "x-api-key": API_KEY },
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.records?.[0] || null;
-  } catch {
-    return null;
-  }
+  const pages = await getAllPages();
+  return pages.find(p => p.slug === slug) || null;
 }
 
 export function markdownToHtml(md: string): string {
@@ -62,7 +54,6 @@ export function markdownToHtml(md: string): string {
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
     .replace(/^---$/gm, '<hr />')
     .replace(/^- (.+)$/gm, '<li>$1</li>')
-    .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
     .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
     .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>')
     .replace(/\n\n/g, '</p><p>')
@@ -73,10 +64,9 @@ export function markdownToHtml(md: string): string {
 
 export function buildSchemaMarkup(page: SEOPage, baseUrl: string): object[] {
   const schemas: object[] = [];
-  const url = `${baseUrl}/library/${page.slug}`;
+  const url = baseUrl + "/" + page.slug;
   const schemaTypes = page.schema_markup || "";
 
-  // Always add WebPage
   schemas.push({
     "@context": "https://schema.org",
     "@type": "WebPage",
@@ -90,37 +80,21 @@ export function buildSchemaMarkup(page: SEOPage, baseUrl: string): object[] {
     },
   });
 
-  // FAQPage schema
   if (schemaTypes.includes("FAQPage") && page.faq_block) {
-    const questions = page.faq_block.split("|").map(q => q.replace(/^Q:\s*/, "").trim()).filter(Boolean);
+    const questions = page.faq_block.split("|").map((q: string) => q.replace(/^Q:\s*/, "").trim()).filter(Boolean);
     if (questions.length) {
       schemas.push({
         "@context": "https://schema.org",
         "@type": "FAQPage",
-        "mainEntity": questions.map(q => ({
+        "mainEntity": questions.map((q: string) => ({
           "@type": "Question",
           "name": q,
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Contact Intugine to learn more about this topic.",
-          },
+          "acceptedAnswer": { "@type": "Answer", "text": "Contact Intugine to learn more." },
         })),
       });
     }
   }
 
-  // HowTo schema
-  if (schemaTypes.includes("HowTo")) {
-    schemas.push({
-      "@context": "https://schema.org",
-      "@type": "HowTo",
-      "name": page.title,
-      "description": page.meta_description,
-      "url": url,
-    });
-  }
-
-  // DefinedTerm schema for glossary
   if (schemaTypes.includes("DefinedTerm") || page.template_type === "glossary") {
     schemas.push({
       "@context": "https://schema.org",
