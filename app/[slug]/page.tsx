@@ -153,7 +153,7 @@ export default async function PageDetail({ params }: { params: Promise<{ slug: s
                   Book a 30-min demo with our team
                 </h3>
                 <a
-                  href="https://www.intugine.com/#demo"
+                  href="https://www.intugine.com/schedule-demo"
                   style={{ display: "block", background: "#fff", color: "#1a3c8f", padding: "0.7rem", borderRadius: 6, textDecoration: "none", fontWeight: 700, fontSize: "0.85rem" }}
                 >
                   Book Demo →
