@@ -5,23 +5,38 @@ interface FAQ { q: string; a: string; }
 
 function parseFAQs(raw: string): FAQ[] {
   if (!raw) return [];
-  // Format: "Q: question | Q: question" (questions only, no answers in faq_block field)
-  // Or "Q: question\nA: answer\n\n"
   const faqs: FAQ[] = [];
 
+  // Format 1: pipe-separated "Q: question | A: answer | Q: question | A: answer"
+  if (raw.includes(" | ") && raw.includes("Q:") && raw.includes("A:")) {
+    const segments = raw.split(" | ").map(s => s.trim()).filter(Boolean);
+    let currentQ = "";
+    for (const seg of segments) {
+      if (seg.startsWith("Q:")) {
+        currentQ = seg.replace(/^Q:\s*/, "").trim();
+      } else if (seg.startsWith("A:") && currentQ) {
+        faqs.push({ q: currentQ, a: seg.replace(/^A:\s*/, "").trim() });
+        currentQ = "";
+      }
+    }
+    if (faqs.length > 0) return faqs.filter(f => f.q);
+  }
+
+  // Format 2: double-newline separated blocks "Q: ...\nA: ..."
   if (raw.includes("A:")) {
-    // Has answers
     const blocks = raw.split(/\n\n+/);
     for (const block of blocks) {
       const qMatch = block.match(/Q:\s*(.+)/);
       const aMatch = block.match(/A:\s*([\s\S]+)/);
       if (qMatch) faqs.push({ q: qMatch[1].trim(), a: aMatch?.[1]?.trim() || "" });
     }
-  } else {
-    // Questions only separated by |
-    const questions = raw.split("|").map(q => q.replace(/^Q:\s*/, "").trim()).filter(Boolean);
-    questions.forEach(q => faqs.push({ q, a: "" }));
+    if (faqs.length > 0) return faqs.filter(f => f.q);
   }
+
+  // Format 3: questions only separated by |
+  const questions = raw.split("|").map(q => q.replace(/^Q:\s*/, "").trim()).filter(Boolean);
+  questions.forEach(q => faqs.push({ q, a: "" }));
+
   return faqs.filter(f => f.q);
 }
 
@@ -29,10 +44,8 @@ export default function FAQBlock({ faqRaw, fullContent }: { faqRaw?: string; ful
   const [open, setOpen] = useState<number | null>(null);
   const faqs = parseFAQs(faqRaw || "");
 
-  // Extract FAQ answers from full_content if not in faq_block
   const enriched = faqs.map(faq => {
     if (faq.a || !fullContent) return faq;
-    // Try to find the answer in full_content after the question
     const qClean = faq.q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const match = fullContent.match(new RegExp(`\\*\\*${qClean}\\*\\*\\s*\\n([\\s\\S]+?)(?=\\n\\*\\*|$)`, "i"));
     return { ...faq, a: match?.[1]?.trim() || "" };
