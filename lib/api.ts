@@ -20,6 +20,8 @@ export interface SEOPage {
   priority?: string;
 }
 
+const LIVE_STATUSES = ["reviewed", "published"];
+
 export async function getAllPages(): Promise<SEOPage[]> {
   try {
     const res = await fetch(BACKEND_URL, {
@@ -31,8 +33,8 @@ export async function getAllPages(): Promise<SEOPage[]> {
     if (!res.ok) throw new Error(`Backend returned ${res.status}`);
     const data = await res.json();
     const pages: SEOPage[] = data.pages || [];
-    // Only serve pages that have content and a slug
-    return pages.filter(p => p.slug && p.slug.trim() !== "");
+    // Only serve pages with a slug AND an approved live status
+    return pages.filter(p => p.slug && p.slug.trim() !== "" && LIVE_STATUSES.includes(p.status || ""));
   } catch (e) {
     console.error("[getAllPages] Failed to fetch from backend:", e);
     return [];
