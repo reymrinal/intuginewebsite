@@ -3,6 +3,7 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import FAQBlock from "@/components/FAQBlock";
 import CTABanner from "@/components/CTABanner";
+import PageAnalytics from "@/components/PageAnalytics";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
@@ -131,7 +132,7 @@ export default async function PageDetail({ params }: { params: Promise<{ slug: s
             <article>
               <div className="prose" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
               <FAQBlock faqRaw={page.faq_block} fullContent={page.full_content} />
-              <CTABanner cta={page.cta} />
+              <CTABanner cta={page.cta} slug={page.slug} industry={page.industry} />
             </article>
 
             <aside style={{ position: "sticky", top: 80 }}>
@@ -184,6 +185,7 @@ export default async function PageDetail({ params }: { params: Promise<{ slug: s
         </div>
       </main>
       <Footer />
+      <PageAnalytics slug={page.slug} industry={page.industry} persona={page.persona} funnel_stage={page.funnel_stage} />
     </>
   );
 }

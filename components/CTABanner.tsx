@@ -1,7 +1,33 @@
-export default function CTABanner({ cta }: { cta?: string }) {
+"use client";
+
+export default function CTABanner({ cta, slug, industry }: { cta?: string; slug?: string; industry?: string }) {
   const parts = cta?.split("|") ?? [];
   const ctaText = parts[0]?.trim() || "See How Intugine Works";
   const ctaAction = parts[1]?.trim() || "Book Demo";
+
+  function handleClick() {
+    // Fire GA4 + GTM events
+    if (typeof window !== "undefined") {
+      // GA4 custom event
+      if (typeof (window as any).gtag === "function") {
+        (window as any).gtag("event", "demo_request_click", {
+          event_category: "CTA",
+          event_label: slug || "unknown",
+          industry: industry || "unknown",
+          value: 1,
+        });
+      }
+      // GTM dataLayer push
+      if ((window as any).dataLayer) {
+        (window as any).dataLayer.push({
+          event: "demo_request_click",
+          page_slug: slug || "unknown",
+          industry: industry || "unknown",
+          cta_text: ctaAction,
+        });
+      }
+    }
+  }
 
   return (
     <div style={{
@@ -17,6 +43,7 @@ export default function CTABanner({ cta }: { cta?: string }) {
       </p>
       <a
         href="https://www.intugine.com/schedule-demo"
+        onClick={handleClick}
         style={{
           display: "inline-block",
           background: "#fff",
