@@ -4,7 +4,7 @@ import Script from "next/script";
 
 // ─── REPLACE THESE WITH YOUR ACTUAL IDs ───────────────────────────────────────
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID || "GTM-54STCR3F";
-const GA4_ID = process.env.NEXT_PUBLIC_GA4_ID || "G-XXXXXXXXXX";
+const GA4_ID = process.env.NEXT_PUBLIC_GA4_ID || "G-02RR46VSFF";
 // ──────────────────────────────────────────────────────────────────────────────
 
 export const metadata: Metadata = {
