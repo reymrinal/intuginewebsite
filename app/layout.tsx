@@ -5,6 +5,7 @@ import Script from "next/script";
 // ─── REPLACE THESE WITH YOUR ACTUAL IDs ───────────────────────────────────────
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID || "GTM-54STCR3F";
 const GA4_ID = process.env.NEXT_PUBLIC_GA4_ID || "G-02RR46VSFF";
+const GADS_ID = "AW-18094702433";
 // ──────────────────────────────────────────────────────────────────────────────
 
 export const metadata: Metadata = {
@@ -85,9 +86,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 }
               });
 
-              // ── Custom Event Helpers ──────────────────────────────
-              // Fire these from anywhere: window.trackDemoClick(), window.trackCTAClick() etc.
+              // ── Google Ads tag ──────────────────────────────────
+              gtag('config', '${GADS_ID}');
 
+              // ── Custom Event Helpers ──────────────────────────────
               window.trackDemoClick = function(source) {
                 gtag('event', 'demo_request_click', {
                   event_category: 'CTA',
@@ -121,6 +123,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               };
             `,
           }}
+        />
+
+        {/* ── Google Ads tag (standalone load) ── */}
+        <Script
+          id="gads-init"
+          strategy="afterInteractive"
+          src={`https://www.googletagmanager.com/gtag/js?id=${GADS_ID}`}
         />
       </head>
       <body>
