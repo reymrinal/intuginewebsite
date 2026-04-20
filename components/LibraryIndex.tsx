@@ -233,7 +233,7 @@ export default function LibraryIndex({ pages }: { pages: SEOPage[] }) {
           75+ global enterprises trust Intugine for real-time supply chain visibility.
         </p>
         <a
-          href="https://www.intugine.com/schedule-demo"
+          href="https://www.intugine.com/schedule-demo?utm_source=library&utm_medium=index_cta&utm_campaign=library_index&utm_content=bottom_cta"
           style={{
             background: "#1a3c8f",
             color: "#fff",

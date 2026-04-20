@@ -160,12 +160,7 @@ export default async function PageDetail({ params }: { params: Promise<{ slug: s
                 <h3 style={{ color: "#fff", margin: "0 0 1rem", fontSize: "1rem", fontWeight: 700, lineHeight: 1.3 }}>
                   Book a 30-min demo with our team
                 </h3>
-                <a
-                  href="https://www.intugine.com/schedule-demo"
-                  style={{ display: "block", background: "#fff", color: "#1a3c8f", padding: "0.7rem", borderRadius: 6, textDecoration: "none", fontWeight: 700, fontSize: "0.85rem" }}
-                >
-                  Book Demo →
-                </a>
+                <SidebarDemoLink slug={page.slug} industry={page.industry} />
               </div>
 
               {page.secondary_keywords && (

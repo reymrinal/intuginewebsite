@@ -145,7 +145,7 @@ export default async function IndustryPage({ params }: { params: Promise<{ slug:
             75+ global enterprises trust Intugine for real-time supply chain visibility.
           </p>
           <a
-            href="https://www.intugine.com/schedule-demo"
+            href={`https://www.intugine.com/schedule-demo?utm_source=library&utm_medium=industry_cta&utm_campaign=${slug}_library&utm_content=industry_page_cta`}
             style={{
               background: "#1a3c8f",
               color: "#fff",
