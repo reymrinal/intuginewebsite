@@ -3,13 +3,13 @@ import { useState } from "react";
 import PageCard from "@/components/PageCard";
 import type { SEOPage } from "@/lib/api";
 
-// Only the 3 active industries — expand this list as new verticals go live
-const ACTIVE_INDUSTRIES = ["Cement", "Freight Marketplace", "API Suite"];
+const ACTIVE_INDUSTRIES = ["Cement", "Freight Marketplace", "API Suite", "PTL/Courier Tracking"];
 
 const INDUSTRY_COLORS: Record<string, string> = {
   "Cement": "#f59e0b",
   "Freight Marketplace": "#10b981",
   "API Suite": "#6366f1",
+  "PTL/Courier Tracking": "#0ea5e9",
   Default: "#1a3c8f",
 };
 
@@ -17,25 +17,25 @@ const INDUSTRY_ICONS: Record<string, string> = {
   "Cement": "🏗️",
   "Freight Marketplace": "🚚",
   "API Suite": "⚡",
-  Default: "📦",
+  "PTL/Courier Tracking": "📦",
+  Default: "📄",
 };
 
 const INDUSTRY_SLUGS: Record<string, string> = {
   "Cement": "cement",
   "Freight Marketplace": "freight-marketplace",
   "API Suite": "api-suite",
+  "PTL/Courier Tracking": "ptl-courier-tracking",
 };
 
 export default function LibraryIndex({ pages }: { pages: SEOPage[] }) {
   const [activeIndustry, setActiveIndustry] = useState<string>("All");
 
-  // Build display list — filter by active tab
   const visiblePages =
     activeIndustry === "All"
       ? pages
       : pages.filter((p) => p.industry === activeIndustry);
 
-  // Group by industry for "All" view, or show single section
   const sections: { industry: string; pages: SEOPage[] }[] =
     activeIndustry === "All"
       ? ACTIVE_INDUSTRIES.map((ind) => ({
@@ -96,7 +96,6 @@ export default function LibraryIndex({ pages }: { pages: SEOPage[] }) {
             flexWrap: "wrap",
           }}
         >
-          {/* All tab */}
           {["All", ...ACTIVE_INDUSTRIES].map((ind) => {
             const isActive = activeIndustry === ind;
             const color = ind === "All" ? "#1a3c8f" : (INDUSTRY_COLORS[ind] || INDUSTRY_COLORS.Default);
@@ -197,9 +196,8 @@ export default function LibraryIndex({ pages }: { pages: SEOPage[] }) {
               >
                 {indPages.length} resources
               </span>
-              {/* Deep-link to industry page */}
               <a
-                href={`https://library.intugine.com/industry/${INDUSTRY_SLUGS[industry] || industry.toLowerCase()}`}
+                href={`https://library.intugine.com/industry/${INDUSTRY_SLUGS[industry] || industry.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
                 style={{
                   marginLeft: "auto",
                   color: INDUSTRY_COLORS[industry] || INDUSTRY_COLORS.Default,

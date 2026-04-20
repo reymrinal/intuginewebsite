@@ -24,6 +24,12 @@ const INDUSTRY_MAP: Record<string, { label: string; icon: string; color: string;
     color: "#6366f1",
     description: "Developer resources for Intugine's IntuDB API — integrate real-time freight data, location intelligence, and logistics workflows into your product.",
   },
+  "ptl-courier-tracking": {
+    label: "PTL/Courier Tracking",
+    icon: "📦",
+    color: "#0ea5e9",
+    description: "End-to-end PTL and courier visibility for Indian enterprises — unified multi-carrier tracking, exception management, e-POD verification, and freight reconciliation via IntuParcel.",
+  },
 };
 
 // Map industry label in DB to slug
@@ -31,6 +37,7 @@ const LABEL_TO_SLUG: Record<string, string> = {
   "Cement": "cement",
   "Freight Marketplace": "freight-marketplace",
   "API Suite": "api-suite",
+  "PTL/Courier Tracking": "ptl-courier-tracking",
 };
 
 export async function generateStaticParams() {
