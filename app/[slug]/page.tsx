@@ -3,6 +3,7 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import FAQBlock from "@/components/FAQBlock";
 import CTABanner from "@/components/CTABanner";
+import SidebarDemoLink from "@/components/SidebarDemoLink";
 import PageAnalytics from "@/components/PageAnalytics";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
