@@ -1,7 +1,8 @@
 import { getAllPages, getPageBySlug, markdownToHtml, buildSchemaMarkup, getTemplateLabel, getReadingTime } from "@/lib/api";
+import { extractFAQSection } from "@/lib/faqUtils";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import FAQBlock, { extractFAQSection } from "@/components/FAQBlock";
+import FAQBlock from "@/components/FAQBlock";
 import CTABanner from "@/components/CTABanner";
 import SidebarDemoLink from "@/components/SidebarDemoLink";
 import PageAnalytics from "@/components/PageAnalytics";
@@ -66,15 +67,12 @@ export default async function PageDetail({ params }: { params: Promise<{ slug: s
   const readingTime = getReadingTime(page.full_content || "");
   const templateLabel = getTemplateLabel(page.template_type);
 
-  // Extract FAQ section from full_content BEFORE rendering body
-  // This prevents raw JSON or **Bold** FAQ text from appearing in the article body
+  // Extract FAQ section from full_content BEFORE rendering body (server-side, safe)
   const faqSection = extractFAQSection(page.full_content);
 
-  // Strip: H1, FAQ section from body content so FAQBlock renders it cleanly
+  // Strip H1 and FAQ section from body so FAQBlock renders it cleanly (no duplicates)
   let bodyContent = page.full_content || "";
-  // Remove H1
   bodyContent = bodyContent.replace(/^#\s+.+\n?/m, "");
-  // Remove FAQ section (everything from ## Frequently Asked Questions to next ## or end)
   bodyContent = bodyContent.replace(/##\s*Frequently Asked Questions[\s\S]+?(?=\n##\s|\n---\s*\n##\s|$)/i, "");
 
   const bodyHtml = markdownToHtml(bodyContent);
@@ -137,7 +135,7 @@ export default async function PageDetail({ params }: { params: Promise<{ slug: s
           <div style={{ display: "grid", gridTemplateColumns: "1fr 260px", gap: "3rem", alignItems: "start" }}>
             <article>
               <div className="prose" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
-              {/* FAQBlock receives the pre-extracted FAQ section — no raw text leaks into body */}
+              {/* FAQBlock is a client component — faqSection extracted server-side and passed as prop */}
               <FAQBlock faqRaw={page.faq_block} faqSection={faqSection} />
               <CTABanner cta={page.cta} slug={page.slug} industry={page.industry} />
             </article>

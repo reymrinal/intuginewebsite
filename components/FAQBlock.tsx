@@ -3,14 +3,6 @@ import { useState } from "react";
 
 interface FAQ { q: string; a: string; }
 
-// Extract the raw FAQ section text from full_content
-export function extractFAQSection(fullContent?: string): string {
-  if (!fullContent) return "";
-  // Match everything after "## Frequently Asked Questions" until next ## or end
-  const match = fullContent.match(/##\s*Frequently Asked Questions\s*\n([\s\S]+?)(?=\n##\s|\n---\s*\n##\s|$)/i);
-  return match?.[1]?.trim() || "";
-}
-
 function parseFAQs(faqRaw: string, faqSection: string): FAQ[] {
   const faqs: FAQ[] = [];
 
@@ -42,13 +34,11 @@ function parseFAQs(faqRaw: string, faqSection: string): FAQ[] {
 
   // ── Format 2: faqSection has **Bold Question?** Answer text lines ─────────
   if (faqSection) {
-    // Match "**Question text?**" followed by answer text (until next ** or end)
     const boldMatches = [...faqSection.matchAll(/\*\*([^*]+\??)\*\*\s*([^\n*][^\n]*(?:\n(?!\*\*)[^\n]+)*)/g)];
     if (boldMatches.length > 0) {
       return boldMatches.map(m => ({ q: m[1].trim(), a: m[2].trim() }));
     }
 
-    // Also handle: "**Question?** Answer on same line" without multiline
     const inlineMatches = [...faqSection.matchAll(/\*\*([^*]+?)\*\*\s+(.+)/g)];
     if (inlineMatches.length > 0) {
       return inlineMatches.map(m => ({ q: m[1].trim(), a: m[2].trim() }));
@@ -74,7 +64,6 @@ function parseFAQs(faqRaw: string, faqSection: string): FAQ[] {
     const questions = faqRaw.split("|").map(q => q.replace(/^Q:\s*/, "").trim()).filter(Boolean);
     if (faqSection) {
       return questions.map(q => {
-        // Try to find answer after the question in faqSection
         const qClean = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\?$/, "\\??");
         const match = faqSection.match(new RegExp(`${qClean}\\s*([^*\\n][^\\n]+(?:\\n(?![A-Z*])[^\\n]+)*)`, "i"));
         return { q, a: match?.[1]?.trim() || "" };
@@ -88,18 +77,14 @@ function parseFAQs(faqRaw: string, faqSection: string): FAQ[] {
 
 export default function FAQBlock({
   faqRaw,
-  fullContent,
   faqSection,
 }: {
   faqRaw?: string;
-  fullContent?: string;
   faqSection?: string;
 }) {
   const [open, setOpen] = useState<number | null>(null);
 
-  // faqSection can be pre-extracted by the parent (page.tsx) to avoid re-parsing
-  const section = faqSection ?? extractFAQSection(fullContent);
-  const faqs = parseFAQs(faqRaw || "", section);
+  const faqs = parseFAQs(faqRaw || "", faqSection || "");
 
   if (!faqs.length) return null;
 
