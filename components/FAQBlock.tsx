@@ -3,12 +3,30 @@ import { useState } from "react";
 
 interface FAQ { q: string; a: string; }
 
-function parseFAQs(raw: string): FAQ[] {
-  if (!raw) return [];
+function parseFAQs(raw: string, fullContent?: string): FAQ[] {
+  if (!raw && !fullContent) return [];
+
   const faqs: FAQ[] = [];
 
+  // Format 0: JSON array [{"question":"...","answer":"..."}, ...]
+  if (raw && raw.trim().startsWith("[")) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .filter((item: any) => item.question || item.q)
+          .map((item: any) => ({
+            q: item.question || item.q || "",
+            a: item.answer || item.a || "",
+          }));
+      }
+    } catch (_) {
+      // not valid JSON, fall through to other parsers
+    }
+  }
+
   // Format 1: pipe-separated "Q: question | A: answer | Q: question | A: answer"
-  if (raw.includes(" | ") && raw.includes("Q:") && raw.includes("A:")) {
+  if (raw && raw.includes(" | ") && raw.includes("Q:") && raw.includes("A:")) {
     const segments = raw.split(" | ").map(s => s.trim()).filter(Boolean);
     let currentQ = "";
     for (const seg of segments) {
@@ -23,7 +41,7 @@ function parseFAQs(raw: string): FAQ[] {
   }
 
   // Format 2: double-newline separated blocks "Q: ...\nA: ..."
-  if (raw.includes("A:")) {
+  if (raw && raw.includes("A:")) {
     const blocks = raw.split(/\n\n+/);
     for (const block of blocks) {
       const qMatch = block.match(/Q:\s*(.+)/);
@@ -33,23 +51,53 @@ function parseFAQs(raw: string): FAQ[] {
     if (faqs.length > 0) return faqs.filter(f => f.q);
   }
 
-  // Format 3: questions only separated by |
-  const questions = raw.split("|").map(q => q.replace(/^Q:\s*/, "").trim()).filter(Boolean);
-  questions.forEach(q => faqs.push({ q, a: "" }));
+  // Format 3: Extract Q&A from full_content inline FAQ section
+  // Looks for pattern: "Question text Answer text" in FAQ sections of full_content
+  if (fullContent) {
+    // Try to find FAQ section in full content: lines like "What is X? Y answer text."
+    const faqSectionMatch = fullContent.match(/##\s*Frequently Asked Questions([\s\S]+?)(?=\n##|$)/i);
+    if (faqSectionMatch) {
+      const faqText = faqSectionMatch[1];
+      // Each Q&A is: "Question sentence? Answer sentence(s)."
+      // Split on lines that look like questions
+      const qaBlocks = faqText.split(/\n(?=[A-Z][^\n]+\?)/);
+      for (const block of qaBlocks) {
+        const trimmed = block.trim();
+        if (!trimmed) continue;
+        const qEnd = trimmed.indexOf("?");
+        if (qEnd === -1) continue;
+        const q = trimmed.slice(0, qEnd + 1).trim();
+        const a = trimmed.slice(qEnd + 1).trim();
+        if (q && a) faqs.push({ q, a });
+      }
+      if (faqs.length > 0) return faqs;
+    }
+  }
+
+  // Format 4: questions only separated by |
+  if (raw) {
+    const questions = raw.split("|").map(q => q.replace(/^Q:\s*/, "").trim()).filter(Boolean);
+    questions.forEach(q => faqs.push({ q, a: "" }));
+  }
 
   return faqs.filter(f => f.q);
 }
 
-export default function FAQBlock({ faqRaw, fullContent }: { faqRaw?: string; fullContent?: string }) {
-  const [open, setOpen] = useState<number | null>(null);
-  const faqs = parseFAQs(faqRaw || "");
-
-  const enriched = faqs.map(faq => {
-    if (faq.a || !fullContent) return faq;
+// Extract FAQ answers from full_content if parseFAQs only got questions
+function enrichFromContent(faqs: FAQ[], fullContent?: string): FAQ[] {
+  if (!fullContent) return faqs;
+  return faqs.map(faq => {
+    if (faq.a) return faq;
     const qClean = faq.q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const match = fullContent.match(new RegExp(`\\*\\*${qClean}\\*\\*\\s*\\n([\\s\\S]+?)(?=\\n\\*\\*|$)`, "i"));
+    const match = fullContent.match(new RegExp(`${qClean}\\s*([\\s\\S]+?)(?=\\n[A-Z][^\\n]+\\?|\\n##|$)`, "i"));
     return { ...faq, a: match?.[1]?.trim() || "" };
   });
+}
+
+export default function FAQBlock({ faqRaw, fullContent }: { faqRaw?: string; fullContent?: string }) {
+  const [open, setOpen] = useState<number | null>(null);
+  const rawFaqs = parseFAQs(faqRaw || "", fullContent);
+  const enriched = enrichFromContent(rawFaqs, fullContent);
 
   if (!enriched.length) return null;
 

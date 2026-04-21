@@ -46,9 +46,37 @@ export async function getPageBySlug(slug: string): Promise<SEOPage | null> {
   return pages.find(p => p.slug === slug) || null;
 }
 
+function renderMarkdownTable(tableBlock: string): string {
+  const lines = tableBlock.trim().split("\n").filter(l => l.trim());
+  if (lines.length < 2) return tableBlock;
+
+  const parseRow = (line: string) =>
+    line.split("|").map(c => c.trim()).filter((_, i, arr) => i > 0 && i < arr.length - 1);
+
+  const headers = parseRow(lines[0]);
+  // lines[1] is the separator row (---|---|...), skip it
+  const rows = lines.slice(2).map(parseRow);
+
+  const headerHtml = headers.map(h => `<th style="padding:0.6rem 1rem;text-align:left;border-bottom:2px solid #e5e7eb;color:#0f2460;font-size:0.85rem;white-space:nowrap">${h}</th>`).join("");
+  const rowsHtml = rows.map(row =>
+    `<tr>${row.map(cell => `<td style="padding:0.6rem 1rem;border-bottom:1px solid #f1f5f9;color:#374151;font-size:0.85rem">${cell}</td>`).join("")}</tr>`
+  ).join("");
+
+  return `<div style="overflow-x:auto;margin:1.5rem 0"><table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden"><thead><tr style="background:#f8fafc">${headerHtml}</tr></thead><tbody>${rowsHtml}</tbody></table></div>`;
+}
+
 export function markdownToHtml(md: string): string {
   if (!md) return "";
-  return md
+
+  // Pre-process: extract and replace markdown tables before line-by-line processing
+  const tableRegex = /(\|.+\|\n\|[-| :]+\|\n(?:\|.+\|\n?)+)/g;
+  const tables: string[] = [];
+  const withPlaceholders = md.replace(tableRegex, (match) => {
+    tables.push(renderMarkdownTable(match));
+    return `%%TABLE_${tables.length - 1}%%`;
+  });
+
+  let html = withPlaceholders
     .replace(/^# (.+)$/gm, '<h1>$1</h1>')
     .replace(/^## (.+)$/gm, '<h2>$1</h2>')
     .replace(/^### (.+)$/gm, '<h3>$1</h3>')
@@ -62,6 +90,13 @@ export function markdownToHtml(md: string): string {
     .replace(/^(?!<[h|u|o|l|h|p|s|b|i|a])/gm, '')
     .replace(/<p><\/p>/g, '')
     .trim();
+
+  // Restore tables
+  tables.forEach((tableHtml, i) => {
+    html = html.replace(`%%TABLE_${i}%%`, tableHtml);
+  });
+
+  return html;
 }
 
 export function buildSchemaMarkup(page: SEOPage, baseUrl: string): object[] {
