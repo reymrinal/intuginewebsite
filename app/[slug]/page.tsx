@@ -1,7 +1,7 @@
 import { getAllPages, getPageBySlug, markdownToHtml, buildSchemaMarkup, getTemplateLabel, getReadingTime } from "@/lib/api";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import FAQBlock from "@/components/FAQBlock";
+import FAQBlock, { extractFAQSection } from "@/components/FAQBlock";
 import CTABanner from "@/components/CTABanner";
 import SidebarDemoLink from "@/components/SidebarDemoLink";
 import PageAnalytics from "@/components/PageAnalytics";
@@ -10,10 +10,7 @@ import type { Metadata } from "next";
 
 const BASE_URL = "https://library.intugine.com";
 
-export const dynamicParams = true; // serve pages not pre-built at request time
-
-// Guard: don't try to render file extensions as pages (e.g. .xml, .txt)
-// These should be served from public/ as static files
+export const dynamicParams = true;
 
 export async function generateStaticParams() {
   try {
@@ -28,7 +25,6 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  // Don't render paths with file extensions — they should be static files
   if (slug.includes('.')) notFound();
   const page = await getPageBySlug(slug);
   if (!page) return { title: "Not Found" };
@@ -62,20 +58,29 @@ const FUNNEL_COLORS: Record<string, string> = {
 
 export default async function PageDetail({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  // Don't render paths with file extensions — they should be static files
   if (slug.includes('.')) notFound();
   const page = await getPageBySlug(slug);
   if (!page) notFound();
 
   const schemas = buildSchemaMarkup(page, BASE_URL);
-  const contentHtml = markdownToHtml(page.full_content || "");
   const readingTime = getReadingTime(page.full_content || "");
   const templateLabel = getTemplateLabel(page.template_type);
 
+  // Extract FAQ section from full_content BEFORE rendering body
+  // This prevents raw JSON or **Bold** FAQ text from appearing in the article body
+  const faqSection = extractFAQSection(page.full_content);
+
+  // Strip: H1, FAQ section from body content so FAQBlock renders it cleanly
+  let bodyContent = page.full_content || "";
+  // Remove H1
+  bodyContent = bodyContent.replace(/^#\s+.+\n?/m, "");
+  // Remove FAQ section (everything from ## Frequently Asked Questions to next ## or end)
+  bodyContent = bodyContent.replace(/##\s*Frequently Asked Questions[\s\S]+?(?=\n##\s|\n---\s*\n##\s|$)/i, "");
+
+  const bodyHtml = markdownToHtml(bodyContent);
+
   const h1Match = page.full_content?.match(/^#\s+(.+)$/m);
   const h1 = h1Match?.[1] || page.title.replace(/ \| Intugine$/, "");
-  const bodyContent = page.full_content?.replace(/^#\s+.+\n/m, "") || "";
-  const bodyHtml = markdownToHtml(bodyContent);
 
   return (
     <>
@@ -132,7 +137,8 @@ export default async function PageDetail({ params }: { params: Promise<{ slug: s
           <div style={{ display: "grid", gridTemplateColumns: "1fr 260px", gap: "3rem", alignItems: "start" }}>
             <article>
               <div className="prose" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
-              <FAQBlock faqRaw={page.faq_block} fullContent={page.full_content} />
+              {/* FAQBlock receives the pre-extracted FAQ section — no raw text leaks into body */}
+              <FAQBlock faqRaw={page.faq_block} faqSection={faqSection} />
               <CTABanner cta={page.cta} slug={page.slug} industry={page.industry} />
             </article>
 
