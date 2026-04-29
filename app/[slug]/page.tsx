@@ -11,7 +11,7 @@ import type { Metadata } from "next";
 
 const BASE_URL = "https://library.intugine.com";
 
-export const dynamicParams = true;
+export const dynamicParams = false;
 
 export async function generateStaticParams() {
   try {
