@@ -292,7 +292,7 @@ export default function ROICalculator() {
                   <p className="text-xl font-bold text-[#22c55e] mb-1">{formatINR(gross)} annually?</p>
                   <p className="text-sm text-white/60 mb-5">See exactly how Intugine delivers this for your cement fleet</p>
                   <a
-                    href="https://intugine.com/contact"
+                    href="https://www.intugine.com/schedule-demo?utm_source=library&utm_medium=roi_calc&utm_campaign=cement_roi&utm_content=cta_btn"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-block bg-[#22c55e] hover:bg-[#16a34a] text-black font-bold px-8 py-3 rounded-xl transition text-sm"
