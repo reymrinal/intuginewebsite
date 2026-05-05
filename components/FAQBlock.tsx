@@ -38,7 +38,6 @@ function parseFAQs(faqRaw: string, faqSection: string): FAQ[] {
     if (boldMatches.length > 0) {
       return boldMatches.map(m => ({ q: m[1].trim(), a: m[2].trim() }));
     }
-
     const inlineMatches = [...faqSection.matchAll(/\*\*([^*]+?)\*\*\s+(.+)/g)];
     if (inlineMatches.length > 0) {
       return inlineMatches.map(m => ({ q: m[1].trim(), a: m[2].trim() }));
@@ -59,8 +58,27 @@ function parseFAQs(faqRaw: string, faqSection: string): FAQ[] {
     if (faqs.length > 0) return faqs;
   }
 
-  // ── Format 4: faq_block Q: only → match answers from faqSection ──────────
-  if (faqRaw?.includes("Q:")) {
+  // ── Format 4: newline-separated Q: / A: pairs (primary format for new pages) ──
+  const sourceForNewlineFormat = faqRaw || faqSection || "";
+  if (sourceForNewlineFormat.includes("Q:") && sourceForNewlineFormat.includes("A:")) {
+    // Split on lines that start with "Q:" — handles multi-line answers
+    const blocks = sourceForNewlineFormat.split(/\n(?=Q:)/);
+    const parsed: FAQ[] = [];
+    for (const block of blocks) {
+      const qMatch = block.match(/^Q:\s*(.+?)(?:\n|$)/);
+      const aMatch = block.match(/\nA:\s*([\s\S]+)/);
+      if (qMatch && aMatch) {
+        parsed.push({
+          q: qMatch[1].trim(),
+          a: aMatch[1].trim().replace(/\n+$/, ""),
+        });
+      }
+    }
+    if (parsed.length > 0) return parsed;
+  }
+
+  // ── Format 5: faq_block Q: only → match answers from faqSection ──────────
+  if (faqRaw?.includes("Q:") && !faqRaw.includes("A:")) {
     const questions = faqRaw.split("|").map(q => q.replace(/^Q:\s*/, "").trim()).filter(Boolean);
     if (faqSection) {
       return questions.map(q => {
