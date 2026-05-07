@@ -159,3 +159,4 @@ export function getReadingTime(content: string): number {
   const words = content?.split(/\s+/).length || 0;
   return Math.max(1, Math.ceil(words / 200));
 }
+// rebuild trigger Thu May  7 04:56:14 UTC 2026
