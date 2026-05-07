@@ -173,9 +173,36 @@ export default async function PageDetail({ params }: { params: Promise<{ slug: s
                   <h3 style={{ margin: "0 0 0.6rem", fontSize: "0.75rem", fontWeight: 700, color: "#9ca3af", textTransform: "uppercase" }}>Related Topics</h3>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
                     {page.secondary_keywords.split(",").map(kw => (
-                      <span key={kw} style={{ background: "#f1f5f9", color: "#374151", padding: "0.2rem 0.5rem", borderRadius: 4, fontSize: "0.75rem" }}>
+                      <a
+                        key={kw}
+                        href={`https://www.google.com/search?q=${encodeURIComponent(kw.trim())}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          background: "#f1f5f9",
+                          color: "#374151",
+                          padding: "0.2rem 0.5rem",
+                          borderRadius: 4,
+                          fontSize: "0.75rem",
+                          textDecoration: "none",
+                          display: "inline-block",
+                          transition: "background 0.15s, color 0.15s",
+                          cursor: "pointer",
+                          border: "1px solid transparent",
+                        }}
+                        onMouseEnter={e => {
+                          (e.currentTarget as HTMLAnchorElement).style.background = "#e0f2fe";
+                          (e.currentTarget as HTMLAnchorElement).style.color = "#0369a1";
+                          (e.currentTarget as HTMLAnchorElement).style.border = "1px solid #bae6fd";
+                        }}
+                        onMouseLeave={e => {
+                          (e.currentTarget as HTMLAnchorElement).style.background = "#f1f5f9";
+                          (e.currentTarget as HTMLAnchorElement).style.color = "#374151";
+                          (e.currentTarget as HTMLAnchorElement).style.border = "1px solid transparent";
+                        }}
+                      >
                         {kw.trim()}
-                      </span>
+                      </a>
                     ))}
                   </div>
                 </div>
