@@ -11,7 +11,6 @@ import type { Metadata } from "next";
 
 const BASE_URL = "https://library.intugine.com";
 
-// Allow dynamic fallback so new pages render even if not in static build
 export const dynamicParams = false;
 
 export async function generateStaticParams() {
@@ -41,137 +40,152 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       description: page.meta_description || "",
       url: canonical,
       type: "article",
+      siteName: "Intugine",
     },
+    twitter: {
+      card: "summary_large_image",
+      title: page.meta_title || page.title,
+      description: page.meta_description || "",
+    },
+    robots: { index: true, follow: true },
   };
 }
 
-export default async function SlugPage({ params }: { params: Promise<{ slug: string }> }) {
+const FUNNEL_COLORS: Record<string, string> = {
+  TOFU: "#10b981",
+  MOFU: "#f59e0b",
+  BOFU: "#ef4444",
+};
+
+export default async function PageDetail({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   if (slug.includes('.')) notFound();
-
   const page = await getPageBySlug(slug);
   if (!page) notFound();
 
-  const { body: contentBody } = extractFAQSection(page.full_content || "");
-  const contentHtml = markdownToHtml(contentBody);
   const schemas = buildSchemaMarkup(page, BASE_URL);
-  const templateLabel = getTemplateLabel(page.template_type || "");
   const readingTime = getReadingTime(page.full_content || "");
+  const templateLabel = getTemplateLabel(page.template_type);
 
-  let faqs: { q: string; a: string }[] = [];
-  if (page.faq_block) {
-    try {
-      const parsed = JSON.parse(page.faq_block);
-      if (Array.isArray(parsed)) faqs = parsed;
-    } catch {
-      faqs = [];
-    }
-  }
+  // Extract FAQ section from full_content BEFORE rendering body (server-side, safe)
+  const faqSection = extractFAQSection(page.full_content);
 
-  const relatedTopics = page.secondary_keywords
-    ? page.secondary_keywords.split(",").map((k: string) => k.trim()).filter(Boolean).slice(0, 5)
-    : [];
+  // Strip H1 and FAQ section from body so FAQBlock renders it cleanly (no duplicates)
+  let bodyContent = page.full_content || "";
+  bodyContent = bodyContent.replace(/^#\s+.+\n?/m, "");
+  bodyContent = bodyContent.replace(/##\s*Frequently Asked Questions[\s\S]+?(?=\n##\s|\n---\s*\n##\s|$)/i, "");
 
-  const industrySlug = page.industry
-    ? page.industry.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")
-    : null;
+  const bodyHtml = markdownToHtml(bodyContent);
+
+  const h1Match = page.full_content?.match(/^#\s+(.+)$/m);
+  const h1 = h1Match?.[1] || page.title.replace(/ \| Intugine$/, "");
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemas) }}
-      />
-      <Nav />
+      {schemas.map((schema, i) => (
+        <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
+      ))}
 
-      <main style={{ minHeight: "100vh", background: "#f8fafc" }}>
-        {/* Hero */}
-        <section style={{ background: "linear-gradient(135deg, #0f2460 0%, #1a3a7a 100%)", padding: "3rem 1.5rem 2.5rem", color: "#fff" }}>
-          <div style={{ maxWidth: "860px", margin: "0 auto" }}>
-            <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem", flexWrap: "wrap", alignItems: "center" }}>
-              <span style={{ background: "rgba(255,255,255,0.15)", color: "#fff", padding: "0.25rem 0.75rem", borderRadius: "999px", fontSize: "0.75rem", fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+      <Nav />
+      <main>
+        <div style={{ background: "#f8fafc", borderBottom: "1px solid #e5e7eb", padding: "0.6rem 1.5rem" }}>
+          <div style={{ maxWidth: 860, margin: "0 auto", fontSize: "0.8rem", color: "#6b7280", display: "flex", gap: "0.4rem", alignItems: "center" }}>
+            <a href="https://www.intugine.com" style={{ color: "#6b7280", textDecoration: "none" }}>Home</a>
+            <span>›</span>
+            <a href="/" style={{ color: "#6b7280", textDecoration: "none" }}>Library</a>
+            <span>›</span>
+            <span style={{ color: "#374151" }}>{templateLabel}</span>
+          </div>
+        </div>
+
+        <div style={{ background: "linear-gradient(135deg, #f0f4ff 0%, #e8eeff 100%)", padding: "3rem 1.5rem 2.5rem" }}>
+          <div style={{ maxWidth: 860, margin: "0 auto" }}>
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "1rem", alignItems: "center" }}>
+              <span style={{ background: "#1a3c8f", color: "#fff", padding: "0.25rem 0.75rem", borderRadius: 6, fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
                 {templateLabel}
               </span>
+              {page.industry && (
+                <span style={{ background: "#fff", color: "#374151", padding: "0.25rem 0.75rem", borderRadius: 6, fontSize: "0.72rem", fontWeight: 600, border: "1px solid #e5e7eb" }}>
+                  {page.industry}
+                </span>
+              )}
               {page.funnel_stage && (
-                <span style={{ background: page.funnel_stage === "BOFU" ? "#dc2626" : page.funnel_stage === "MOFU" ? "#d97706" : "#059669", color: "#fff", padding: "0.25rem 0.75rem", borderRadius: "999px", fontSize: "0.75rem", fontWeight: 600, letterSpacing: "0.05em" }}>
+                <span style={{ background: FUNNEL_COLORS[page.funnel_stage] || "#6b7280", color: "#fff", padding: "0.25rem 0.65rem", borderRadius: 6, fontSize: "0.72rem", fontWeight: 600 }}>
                   {page.funnel_stage}
                 </span>
               )}
-              {industrySlug && (
-                <a href={`/industry/${industrySlug}`} style={{ background: "rgba(255,255,255,0.1)", color: "#e0e7ff", padding: "0.25rem 0.75rem", borderRadius: "999px", fontSize: "0.75rem", fontWeight: 500, textDecoration: "none", border: "1px solid rgba(255,255,255,0.2)" }}>
-                  {page.industry}
-                </a>
-              )}
             </div>
-            <h1 style={{ fontSize: "clamp(1.5rem, 4vw, 2.25rem)", fontWeight: 800, lineHeight: 1.2, marginBottom: "1rem", color: "#fff" }}>
-              {page.meta_title || page.title}
+            <h1 style={{ color: "#0f2460", fontSize: "2.1rem", fontWeight: 800, lineHeight: 1.2, margin: "0 0 1rem" }}>
+              {h1}
             </h1>
             {page.meta_description && (
-              <p style={{ fontSize: "1.05rem", color: "rgba(255,255,255,0.8)", lineHeight: 1.6, maxWidth: "680px" }}>
+              <p style={{ color: "#374151", fontSize: "1.05rem", lineHeight: 1.65, marginBottom: "1rem", maxWidth: 680 }}>
                 {page.meta_description}
               </p>
             )}
-            <div style={{ marginTop: "1.25rem", display: "flex", gap: "1rem", flexWrap: "wrap", fontSize: "0.8rem", color: "rgba(255,255,255,0.6)" }}>
-              <span>⏱ {readingTime} min read</span>
+            <div style={{ display: "flex", gap: "1.5rem", fontSize: "0.8rem", color: "#6b7280", alignItems: "center", flexWrap: "wrap" }}>
+              <span>📖 {readingTime} min read</span>
               {page.persona && <span>👤 For: {page.persona}</span>}
               {page.target_keyword && <span>🔍 {page.target_keyword}</span>}
             </div>
           </div>
-        </section>
+        </div>
 
-        {/* Content */}
-        <section style={{ maxWidth: "1100px", margin: "0 auto", padding: "2.5rem 1.5rem", display: "grid", gridTemplateColumns: "1fr 280px", gap: "2.5rem" }}>
-          <div>
-            {/* Article body */}
-            <div
-              style={{ background: "#fff", borderRadius: "12px", padding: "2rem 2.5rem", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", lineHeight: 1.8, color: "#1e293b", fontSize: "1rem" }}
-              dangerouslySetInnerHTML={{ __html: contentHtml }}
-            />
+        <div style={{ maxWidth: 860, margin: "0 auto", padding: "2.5rem 1.5rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 260px", gap: "3rem", alignItems: "start" }}>
+            <article>
+              <div className="prose" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+              {/* FAQBlock is a client component — faqSection extracted server-side and passed as prop */}
+              <FAQBlock faqRaw={page.faq_block} faqSection={faqSection} />
+              <CTABanner cta={page.cta} slug={page.slug} industry={page.industry} />
+            </article>
 
-            {/* FAQ */}
-            {faqs.length > 0 && (
-              <div style={{ marginTop: "2rem" }}>
-                <FAQBlock faqs={faqs} />
+            <aside style={{ position: "sticky", top: 80 }}>
+              <div style={{ background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 10, padding: "1.25rem", marginBottom: "1.25rem" }}>
+                <h3 style={{ margin: "0 0 0.75rem", fontSize: "0.85rem", fontWeight: 700, color: "#0f2460", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                  Quick Facts
+                </h3>
+                <dl style={{ margin: 0, display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+                  {[
+                    { label: "Industry", value: page.industry },
+                    { label: "Audience", value: page.persona },
+                    { label: "Stage", value: page.funnel_stage },
+                    { label: "Read time", value: `${readingTime} min` },
+                  ].filter(i => i.value).map(item => (
+                    <div key={item.label}>
+                      <dt style={{ fontSize: "0.72rem", color: "#9ca3af", fontWeight: 600, textTransform: "uppercase" }}>{item.label}</dt>
+                      <dd style={{ margin: 0, fontSize: "0.85rem", color: "#374151", fontWeight: 500 }}>{item.value}</dd>
+                    </div>
+                  ))}
+                </dl>
               </div>
-            )}
 
-            {/* Related topics */}
-            {relatedTopics.length > 0 && (
-              <div style={{ marginTop: "2rem", background: "#fff", borderRadius: "12px", padding: "1.5rem 2rem", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-                <h3 style={{ fontSize: "0.85rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.75rem" }}>Related Topics</h3>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-                  {relatedTopics.map((topic: string) => {
-                    const topicSlug = topic.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-                    return (
-                      <a key={topic} href={`/${topicSlug}`} style={{ background: "#f1f5f9", color: "#475569", padding: "0.35rem 0.75rem", borderRadius: "999px", fontSize: "0.8rem", textDecoration: "none", border: "1px solid #e2e8f0" }}>
-                        {topic}
-                      </a>
-                    );
-                  })}
+              <div style={{ background: "linear-gradient(135deg, #1a3c8f, #0f2460)", borderRadius: 10, padding: "1.5rem", textAlign: "center" }}>
+                <p style={{ color: "#bfdbfe", fontSize: "0.8rem", marginBottom: "0.5rem" }}>See Intugine in action</p>
+                <h3 style={{ color: "#fff", margin: "0 0 1rem", fontSize: "1rem", fontWeight: 700, lineHeight: 1.3 }}>
+                  Book a 30-min demo with our team
+                </h3>
+                <SidebarDemoLink slug={page.slug} industry={page.industry} />
+              </div>
+
+              {page.secondary_keywords && (
+                <div style={{ marginTop: "1.25rem", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10, padding: "1rem" }}>
+                  <h3 style={{ margin: "0 0 0.6rem", fontSize: "0.75rem", fontWeight: 700, color: "#9ca3af", textTransform: "uppercase" }}>Related Topics</h3>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
+                    {page.secondary_keywords.split(",").map(kw => (
+                      <span key={kw} style={{ background: "#f1f5f9", color: "#374151", padding: "0.2rem 0.5rem", borderRadius: 4, fontSize: "0.75rem" }}>
+                        {kw.trim()}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-
-            {/* CTA */}
-            <CTABanner cta={page.cta} industry={page.industry} />
-
-            {/* Back link */}
-            <div style={{ marginTop: "2rem" }}>
-              <a href="/" style={{ color: "#0f2460", fontSize: "0.9rem", textDecoration: "none", fontWeight: 500 }}>
-                ← Back to Library
-              </a>
-            </div>
+              )}
+            </aside>
           </div>
-
-          {/* Sidebar */}
-          <aside style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-            <SidebarDemoLink industry={page.industry} keyword={page.target_keyword} />
-            <PageAnalytics slug={page.slug} />
-          </aside>
-        </section>
+        </div>
       </main>
-
       <Footer />
+      <PageAnalytics slug={page.slug} industry={page.industry} persona={page.persona} funnel_stage={page.funnel_stage} />
     </>
   );
 }
