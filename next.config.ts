@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 
+// Build trigger: 2026-05-07T11:02 — force regenerate all 140 pages
 const nextConfig: NextConfig = {
   images: {
     domains: ["intugine.com"],
