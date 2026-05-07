@@ -12,7 +12,7 @@ import type { Metadata } from "next";
 const BASE_URL = "https://library.intugine.com";
 
 // Allow dynamic fallback so new pages render even if not in static build
-export const dynamicParams = true;
+export const dynamicParams = false;
 
 export async function generateStaticParams() {
   try {
