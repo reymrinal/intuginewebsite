@@ -63,6 +63,19 @@ export default async function PageDetail({ params }: { params: Promise<{ slug: s
   const page = await getPageBySlug(slug);
   if (!page) notFound();
 
+  // Build keyword→slug map for smart Related Topics linking
+  const allPages = await getAllPages();
+  const slugByKeyword: Record<string, string> = {};
+  for (const p of allPages) {
+    if (p.target_keyword) slugByKeyword[p.target_keyword.toLowerCase().trim()] = p.slug;
+    if (p.secondary_keywords) {
+      for (const kw of p.secondary_keywords.split(",")) {
+        const k = kw.toLowerCase().trim();
+        if (k && !slugByKeyword[k]) slugByKeyword[k] = p.slug;
+      }
+    }
+  }
+
   const schemas = buildSchemaMarkup(page, BASE_URL);
   const readingTime = getReadingTime(page.full_content || "");
   const templateLabel = getTemplateLabel(page.template_type);
@@ -175,9 +188,11 @@ export default async function PageDetail({ params }: { params: Promise<{ slug: s
                     {page.secondary_keywords.split(",").map(kw => (
                       <a
                         key={kw}
-                        href={`https://www.google.com/search?q=${encodeURIComponent(kw.trim())}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        href={slugByKeyword[kw.toLowerCase().trim()]
+                          ? `${BASE_URL}/${slugByKeyword[kw.toLowerCase().trim()]}`
+                          : `https://www.google.com/search?q=${encodeURIComponent(kw.trim())}`}
+                        target={slugByKeyword[kw.toLowerCase().trim()] ? "_self" : "_blank"}
+                        rel={slugByKeyword[kw.toLowerCase().trim()] ? undefined : "noopener noreferrer"}
                         style={{
                           background: "#f1f5f9",
                           color: "#374151",
