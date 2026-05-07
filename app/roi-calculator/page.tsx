@@ -86,10 +86,10 @@ export default function ROICalculator() {
   // Better: ask for trips separately in detailed mode too — but user said "select tons, km, rate" as alternate to freight
   // So: monthly freight = tons × km × rate (total monthly freight spend), trips stays from simple mode
   // We'll keep trips input visible in detailed mode for platform cost calc, but derive freightN from tons×km×rate
-  const detailedFreight = tonsN * kmN_input * rateN; // total monthly freight ₹
+  const detailedFreight = tonsN * kmN_input * rateN; // freight per trip (tons/trip × km × ₹/ton·km)
 
   const effectiveTrips   = tripsN;
-  const effectiveFreight = mode === "simple" ? freightN : (tripsN > 0 ? detailedFreight / tripsN : 0);
+  const effectiveFreight = mode === "simple" ? freightN : detailedFreight; // detailedFreight is already per-trip
 
   const leakN  = parseFloat(leakPct) || 10;  // default changed to 10
   const kmN    = parseFloat(kmPct)   || 20;  // default changed to 20
@@ -207,10 +207,10 @@ export default function ROICalculator() {
                   <>
                     <div>
                       <label className="block text-sm font-medium text-white/80 mb-1.5">
-                        Total tonnage per month (MT) <span className="text-[#22c55e]">*</span>
+                        Tonnage per trip (MT) <span className="text-[#22c55e]">*</span>
                       </label>
                       <input
-                        type="number" min="0" placeholder="e.g. 10000"
+                        type="number" min="0" placeholder="e.g. 20"
                         value={tons}
                         onChange={e => setTons(e.target.value)}
                         className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-[#22c55e]/50 focus:bg-white/[0.08] transition text-base"
@@ -241,7 +241,7 @@ export default function ROICalculator() {
                     {/* Show derived freight value */}
                     {detailedFreight > 0 && (
                       <div className="bg-[#22c55e]/5 border border-[#22c55e]/20 rounded-xl px-4 py-3 flex justify-between items-center">
-                        <span className="text-xs text-white/50">Monthly freight (derived)</span>
+                        <span className="text-xs text-white/50">Freight per trip (derived)</span>
                         <span className="text-sm font-bold text-[#22c55e]">{formatINR(detailedFreight)}</span>
                       </div>
                     )}
@@ -342,7 +342,7 @@ export default function ROICalculator() {
                   <div className="bg-[#22c55e]/5 border border-[#22c55e]/20 rounded-xl px-4 py-2.5 flex items-center gap-2">
                     <span className="text-[#22c55e] text-xs">●</span>
                     <span className="text-xs text-white/50">
-                      Using <span className="text-white/70 font-medium">detailed mode</span> — avg freight per trip: <span className="text-[#22c55e] font-semibold">{formatINR(effectiveFreight)}</span>
+                      Using <span className="text-white/70 font-medium">detailed mode</span> — freight per trip: <span className="text-[#22c55e] font-semibold">{formatINR(effectiveFreight)}</span>
                     </span>
                   </div>
                 )}
