@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import CTABanner from "@/components/CTABanner";
 
 // ── Indian number format ──────────────────────────────────────────────────────
 function formatINR(value: number): string {
@@ -416,6 +417,12 @@ export default function ROICalculator() {
           </div>
         </div>
 
+        {/* ── CTA Banner ── */}
+        <CTABanner
+          cta="See how leading cement companies use Intugine to eliminate freight losses | Book a Free Demo"
+          slug="roi-calculator"
+          industry="Cement"
+        />
       </main>
 
       <Footer />
