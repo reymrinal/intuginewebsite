@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Intugine IAS — Activity Sensing Simulation</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #03080F;
+    --panel: #080F1A;
+    --panel2: #0C1520;
+    --border: #132030;
+    --blue: #1B6FD4;
+    --blue-light: #3A8FF0;
+    --blue-glow: rgba(27,111,212,0.15);
+    --green: #00C97A;
+    --green-glow: rgba(0,201,122,0.15);
+    --amber: #F0A030;
+    --amber-glow: rgba(240,160,48,0.12);
+    --red: #E84040;
+    --red-glow: rgba(232,64,64,0.12);
+    --text: #E8EFF8;
+    --text2: #7A9AB8;
+    --text3: #3A5A78;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  .page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 32px 20px 60px;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 36px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .brand { font-family: var(--sans); font-size: 18px; font-weight: 800; color: var(--blue-light); letter-spacing: -0.3px; }
+  .brand span { color: var(--text3); font-weight: 400; font-size: 12px; margin-left: 10px; letter-spacing: 0.06em; text-transform: uppercase; }
+  .status-pill {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 4px 12px;
+    border: 1px solid var(--blue);
+    color: var(--blue-light);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .status-pill.live { border-color: var(--green); color: var(--green); animation: blink 1.4s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* Scene title */
+  .scene-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .scene-num { font-family: var(--mono); font-size: 10px; color: var(--text3); letter-spacing: 0.1em; margin-bottom: 4px; }
+  .scene-title { font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
+  .scene-desc { font-size: 13px; color: var(--text2); line-height: 1.6; max-width: 500px; }
+
+  /* STEP INDICATOR */
+  .steps {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 28px;
+  }
+  .step {
+    flex: 1;
+    height: 3px;
+    background: var(--border);
+    transition: background 0.4s;
+    cursor: pointer;
+  }
+  .step.active { background: var(--blue); }
+  .step.done { background: var(--green); }
+
+  /* PANEL */
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-bottom: 12px;
+  }
+  .panel-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* WAVEFORM CANVAS */
+  #waveCanvas {
+    width: 100%;
+    height: 120px;
+    display: block;
+    background: #050C15;
+  }
+
+  /* ROLLING WINDOW BAR CHART */
+  .bar-grid {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 80px;
+    background: #050C15;
+    padding: 8px 8px 0;
+  }
+  .bar-col {
+    flex: 1;
+    min-width: 8px;
+    background: var(--border);
+    transition: height 0.3s, background 0.3s;
+    height: 4px;
+  }
+  .bar-col.motion { background: var(--green); }
+  .bar-col.idle { background: var(--text3); }
+
+  /* WINDOW STATUS */
+  .window-status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+    padding: 10px 14px;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+  }
+  .ws-label { font-family: var(--mono); font-size: 11px; color: var(--text2); }
+  .ws-val { font-family: var(--mono); font-size: 14px; font-weight: 600; }
+  .ws-val.green { color: var(--green); }
+  .ws-val.amber { color: var(--amber); }
+  .ws-val.red { color: var(--red); }
+
+  /* PROGRESS BAR */
+  .pbar-wrap { flex: 1; height: 6px; background: var(--border); margin: 0 16px; }
+  .pbar-fill { height: 6px; background: var(--blue); transition: width 0.4s, background 0.4s; width: 0%; }
+  .pbar-fill.green { background: var(--green); }
+  .pbar-threshold {
+    position: relative;
+    width: 100%;
+    height: 6px;
+  }
+  .threshold-marker {
+    position: absolute;
+    top: -4px;
+    width: 2px;
+    height: 14px;
+    background: var(--amber);
+    left: 60%;
+  }
+  .threshold-label {
+    position: absolute;
+    top: -18px;
+    left: 60%;
+    transform: translateX(-50%);
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--amber);
+    white-space: nowrap;
+  }
+
+  /* LOCATION VERIFICATION */
+  .location-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .loc-card {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    padding: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+  .loc-card-label { font-family: var(--mono); font-size: 9px; color: var(--text3); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; }
+  .loc-card-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .loc-card-sub { font-size: 12px; color: var(--text2); line-height: 1.5; }
+  .loc-scan-line {
+    position: absolute;
+    left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--blue-light), transparent);
+    top: 0;
+    animation: scan 2s linear infinite;
+    opacity: 0;
+  }
+  .loc-scan-line.active { opacity: 1; }
+  @keyframes scan { 0%{top:0%} 100%{top:100%} }
+
+  .ocr-box {
+    background: #050C15;
+    border: 1px solid var(--border);
+    padding: 10px 12px;
+    margin-top: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text2);
+    min-height: 36px;
+    position: relative;
+  }
+  .ocr-match { color: var(--green); font-weight: 600; }
+  .ocr-mismatch { color: var(--red); }
+  .ocr-cursor { display: inline-block; width: 7px; height: 12px; background: var(--green); animation: blink 0.7s infinite; vertical-align: middle; }
+
+  /* CONFIDENCE SCORE */
+  .confidence-wrap {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 20px;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+  }
+  .score-circle {
+    position: relative;
+    width: 90px;
+    height: 90px;
+    flex-shrink: 0;
+  }
+  .score-svg { width: 90px; height: 90px; transform: rotate(-90deg); }
+  .score-bg { fill: none; stroke: var(--border); stroke-width: 6; }
+  .score-arc { fill: none; stroke: var(--green); stroke-width: 6; stroke-linecap: round; stroke-dasharray: 245; stroke-dashoffset: 245; transition: stroke-dashoffset 1.5s cubic-bezier(0.4,0,0.2,1); }
+  .score-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .score-num { font-family: var(--mono); font-size: 22px; font-weight: 600; color: var(--text); line-height: 1; }
+  .score-label { font-family: var(--mono); font-size: 8px; color: var(--text3); letter-spacing: 0.08em; margin-top: 2px; }
+
+  .verdict-wrap { flex: 1; }
+  .verdict-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border: 1px solid;
+    margin-bottom: 10px;
+    opacity: 0;
+    transition: opacity 0.5s;
+  }
+  .verdict-status.show { opacity: 1; }
+  .verdict-status.confirmed { border-color: var(--green); color: var(--green); background: var(--green-glow); }
+  .verdict-status.alert { border-color: var(--red); color: var(--red); background: var(--red-glow); }
+  .verdict-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: blink 1s infinite; }
+  .verdict-desc { font-size: 13px; color: var(--text2); line-height: 1.6; }
+
+  /* SIGNAL LOG */
+  .signal-log {
+    background: #050C15;
+    border: 1px solid var(--border);
+    padding: 12px 14px;
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1.9;
+    color: var(--text2);
+    min-height: 80px;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+  .log-line { display: flex; gap: 10px; }
+  .log-time { color: var(--text3); flex-shrink: 0; }
+  .log-blue { color: var(--blue-light); }
+  .log-green { color: var(--green); }
+  .log-amber { color: var(--amber); }
+  .log-red { color: var(--red); }
+
+  /* CONTROLS */
+  .controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+  .scenario-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .scenario-btn {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 8px 14px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text2);
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+  .scenario-btn:hover { border-color: var(--blue); color: var(--blue-light); }
+  .scenario-btn.active { border-color: var(--blue); color: var(--blue-light); background: var(--blue-glow); }
+  .scenario-btn.active.green { border-color: var(--green); color: var(--green); background: var(--green-glow); }
+  .scenario-btn.active.red { border-color: var(--red); color: var(--red); background: var(--red-glow); }
+
+  .run-btn {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 10px 24px;
+    background: var(--blue);
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    transition: background 0.2s;
+  }
+  .run-btn:hover { background: var(--blue-light); }
+  .run-btn:disabled { background: var(--border); color: var(--text3); cursor: not-allowed; }
+
+  /* SCENARIO TAG */
+  .scenario-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 10px;
+    border: 1px solid var(--border);
+    color: var(--text3);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    transition: all 0.4s;
+  }
+  .scenario-tag.green { border-color: var(--green); color: var(--green); background: var(--green-glow); }
+  .scenario-tag.red { border-color: var(--red); color: var(--red); background: var(--red-glow); }
+  .scenario-tag.amber { border-color: var(--amber); color: var(--amber); background: var(--amber-glow); }
+
+  /* LAYERS INDICATOR */
+  .layers-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .layer-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 10px;
+    border: 1px solid var(--border);
+    color: var(--text3);
+    letter-spacing: 0.05em;
+    transition: all 0.5s;
+  }
+  .layer-tag.firing { border-color: var(--blue-light); color: var(--blue-light); background: var(--blue-glow); }
+  .layer-tag.done { border-color: var(--green); color: var(--green); background: var(--green-glow); }
+
+  @media (max-width: 560px) {
+    .location-grid { grid-template-columns: 1fr; }
+    .controls { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <div>
+      <div class="brand">Intugine. <span>IAS Module</span></div>
+    </div>
+    <div id="statusPill" class="status-pill">Ready</div>
+  </div>
+
+  <!-- Scenario selector -->
+  <div class="scene-header">
+    <div>
+      <div class="scene-num">SIMULATION — SELECT SCENARIO</div>
+      <div class="scene-title">Activity Sensing Engine</div>
+    </div>
+    <div id="scenarioTag" class="scenario-tag">— Select scenario</div>
+  </div>
+
+  <div class="controls" style="margin-top:0;margin-bottom:24px;">
+    <div class="scenario-btns">
+      <button class="scenario-btn active" onclick="selectScenario('unloading')" id="btn-unloading">✓ Confirmed unloading</button>
+      <button class="scenario-btn" onclick="selectScenario('idle')" id="btn-idle">— No activity / idle halt</button>
+      <button class="scenario-btn" onclick="selectScenario('wrongloc')" id="btn-wrongloc">⚠ Wrong location</button>
+    </div>
+    <button class="run-btn" id="runBtn" onclick="runSimulation()">Run simulation →</button>
+  </div>
+
+  <!-- Step indicators -->
+  <div class="steps">
+    <div class="step active" id="step0"></div>
+    <div class="step" id="step1"></div>
+    <div class="step" id="step2"></div>
+    <div class="step" id="step3"></div>
+  </div>
+
+  <!-- Layer firing indicators -->
+  <div class="layers-row">
+    <div class="layer-tag" id="l1">L1 — Coverage</div>
+    <div class="layer-tag" id="l2">L2 — Activity sensing</div>
+    <div class="layer-tag" id="l3">L3 — AI visual verify</div>
+    <div class="layer-tag" id="l4">L4 — Confidence engine</div>
+  </div>
+
+  <!-- PANEL 1: Motion waveform -->
+  <div class="panel">
+    <div class="panel-label">Layer 2 — Activity sensor waveform (activity sensor)</div>
+    <canvas id="waveCanvas" height="120"></canvas>
+    <div style="display:flex;justify-content:space-between;margin-top:6px;">
+      <span style="font-family:var(--mono);font-size:10px;color:var(--text3);">t=0</span>
+      <span style="font-family:var(--mono);font-size:10px;color:var(--blue-light);" id="waveLabel">Waiting for halt...</span>
+      <span style="font-family:var(--mono);font-size:10px;color:var(--text3);">t=20min</span>
+    </div>
+  </div>
+
+  <!-- PANEL 2: Rolling window -->
+  <div class="panel">
+    <div class="panel-label">Rolling window analysis — 20-min window · 1-min candles</div>
+    <div class="bar-grid" id="barGrid"></div>
+    <div class="window-status">
+      <span class="ws-label">Positive motion packets</span>
+      <div class="pbar-wrap" style="position:relative;">
+        <div class="threshold-label">60% threshold</div>
+        <div style="position:relative;height:6px;background:var(--border);">
+          <div class="threshold-marker"></div>
+          <div class="pbar-fill" id="pbarFill"></div>
+        </div>
+      </div>
+      <span class="ws-val" id="pbarPct">0%</span>
+    </div>
+    <div class="window-status" style="margin-top:6px;">
+      <span class="ws-label">Classification</span>
+      <span class="ws-val" id="classLabel" style="color:var(--text3);">Analysing...</span>
+    </div>
+  </div>
+
+  <!-- PANEL 3: AI Visual verification -->
+  <div class="panel">
+    <div class="panel-label">Layer 3 — AI visual verification + spatial context</div>
+    <div class="location-grid">
+      <div class="loc-card">
+        <div class="loc-scan-line" id="scanLine1"></div>
+        <div class="loc-card-label">360° street view scan</div>
+        <div class="loc-card-title" id="locType">—</div>
+        <div class="loc-card-sub" id="locDesc">Awaiting halt classification...</div>
+        <div class="ocr-box" id="ocrBox">
+          <span id="ocrText">—</span>
+        </div>
+      </div>
+      <div class="loc-card">
+        <div class="loc-scan-line" id="scanLine2"></div>
+        <div class="loc-card-label">Ship-to-party match</div>
+        <div class="loc-card-title" id="stpTitle">—</div>
+        <div class="loc-card-sub" id="stpDesc">Cross-referencing dispatch data...</div>
+        <div class="ocr-box" id="stpBox">
+          <span id="stpText">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL 4: Confidence score + verdict -->
+  <div class="panel">
+    <div class="panel-label">Layer 4 — Confidence engine output</div>
+    <div class="confidence-wrap">
+      <div class="score-circle">
+        <svg class="score-svg" viewBox="0 0 90 90">
+          <circle class="score-bg" cx="45" cy="45" r="39"/>
+          <circle class="score-arc" id="scoreArc" cx="45" cy="45" r="39"/>
+        </svg>
+        <div class="score-text">
+          <div class="score-num" id="scoreNum">0</div>
+          <div class="score-label">score</div>
+        </div>
+      </div>
+      <div class="verdict-wrap">
+        <div class="verdict-status" id="verdictStatus">
+          <div class="verdict-dot"></div>
+          <span id="verdictLabel">—</span>
+        </div>
+        <div class="verdict-desc" id="verdictDesc">Run a scenario to see the confidence engine output.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Signal log -->
+  <div class="panel">
+    <div class="panel-label">System log</div>
+    <div class="signal-log" id="signalLog">
+      <div class="log-line"><span class="log-time">00:00:00</span><span class="log-blue">IAS module initialised — awaiting halt trigger</span></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── STATE ──
+let scenario = 'unloading';
+let running = false;
+let animFrame;
+let wavePoints = [];
+let bars = [];
+let logLines = [];
+const BARS = 20;
+
+// ── SCENARIO DATA ──
+const SCENARIOS = {
+  unloading: {
+    tag: 'Confirmed unloading',
+    tagClass: 'green',
+    waveAmplitude: 0.7,
+    waveNoise: 0.3,
+    positiveMotion: 78,
+    locType: 'Cement retail dealer',
+    locDesc: 'Stacked cement bags, scaffolding, building material context detected',
+    ocrText: 'ACC CEMENT · AUTHORISED DEALER',
+    ocrClass: 'ocr-match',
+    stpTitle: 'Ship-to-party matched',
+    stpDesc: 'OCR text cross-referenced against dispatch consignee',
+    stpText: 'JYOTI TEMGORE SG · MATCH ✓',
+    stpClass: 'ocr-match',
+    score: 87,
+    verdictClass: 'confirmed',
+    verdictLabel: '✓ Confirmed valid unloading',
+    verdictDesc: 'All 4 layers confirm active physical unloading at the correct authorised dealer location. Automated debit triggered.'
+  },
+  idle: {
+    tag: 'No activity — idle halt',
+    tagClass: 'amber',
+    waveAmplitude: 0.08,
+    waveNoise: 0.05,
+    positiveMotion: 12,
+    locType: 'Roadside fuel station',
+    locDesc: 'Petrol pump canopy, fuel dispenser structures, no cement context detected',
+    ocrText: 'HP FUEL STATION · RASOOLPUR NH',
+    ocrClass: 'ocr-mismatch',
+    stpTitle: 'No ship-to-party match',
+    stpDesc: 'Location classified as routine halt — fuel or rest stop',
+    stpText: 'NO CEMENT DEALER CONTEXT — ROUTINE HALT',
+    stpClass: 'ocr-mismatch',
+    score: 8,
+    verdictClass: 'alert',
+    verdictLabel: '⛟ Routine halt — no unloading',
+    verdictDesc: 'Motion below threshold. Location classified as fuel/rest stop. Not counted as delivery event. Trip continues.'
+  },
+  wrongloc: {
+    tag: 'Wrong location — alert',
+    tagClass: 'red',
+    waveAmplitude: 0.65,
+    waveNoise: 0.25,
+    positiveMotion: 71,
+    locType: 'Cement dealer — wrong territory',
+    locDesc: 'Cement bags and dealer signage detected. Location does not match planned delivery territory.',
+    ocrText: 'SARABJIT SINGH · IRON & TIMBER · RASOOLPUR, TARANTARAN',
+    ocrClass: 'ocr-mismatch',
+    stpTitle: 'Ship-to-party MISMATCH',
+    stpDesc: 'Physical location is in Punjab. Dispatch was for Haryana dealer.',
+    stpText: 'MISMATCH — TERRITORY DEVIATION DETECTED ✗',
+    stpClass: 'ocr-mismatch',
+    score: 22,
+    verdictClass: 'alert',
+    verdictLabel: '⚠ Back-unloading alert — wrong location',
+    verdictDesc: 'Unloading confirmed but at wrong territory dealer. State border deviation detected — possible grey market diversion. Control tower alerted immediately.'
+  }
+};
+
+// ── HELPERS ──
+function getTime() {
+  const d = new Date();
+  return d.toTimeString().slice(0,8);
+}
+
+function addLog(msg, cls) {
+  const log = document.getElementById('signalLog');
+  const div = document.createElement('div');
+  div.className = 'log-line';
+  div.innerHTML = `<span class="log-time">${getTime()}</span><span class="${cls||'log-blue'}">${msg}</span>`;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
+function setStep(n) {
+  for(let i=0;i<4;i++) {
+    const s = document.getElementById('step'+i);
+    s.className = 'step' + (i<n?' done': i===n?' active':'');
+  }
+}
+
+function setLayer(id, state) {
+  const el = document.getElementById(id);
+  el.className = 'layer-tag' + (state==='firing'?' firing': state==='done'?' done':'');
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ── WAVEFORM ──
+function drawWave(canvas, points, scenario) {
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  // Grid
+  ctx.strokeStyle = 'rgba(19,32,48,0.8)';
+  ctx.lineWidth = 1;
+  for(let y=H/4; y<H; y+=H/4) {
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+  }
+  // Zero line
+  ctx.strokeStyle = 'rgba(58,90,120,0.4)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0,H/2); ctx.lineTo(W,H/2); ctx.stroke();
+
+  if(points.length < 2) return;
+
+  // Wave
+  ctx.strokeStyle = scenario==='idle' ? '#4a7faa' : '#1B6FD4';
+  ctx.lineWidth = 2;
+  ctx.shadowColor = scenario==='idle' ? '#1B6FD4' : '#3A8FF0';
+  ctx.shadowBlur = 8;
+  ctx.beginPath();
+  points.forEach((p,i) => {
+    const x = (i/(points.length-1))*W;
+    const y = H/2 - p*(H/2.2);
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Fill
+  ctx.fillStyle = scenario==='idle' ? 'rgba(27,111,212,0.06)' : 'rgba(27,111,212,0.1)';
+  ctx.beginPath();
+  points.forEach((p,i) => {
+    const x = (i/(points.length-1))*W;
+    const y = H/2 - p*(H/2.2);
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  });
+  ctx.lineTo(W,H/2); ctx.lineTo(0,H/2); ctx.closePath(); ctx.fill();
+}
+
+function generateWavePoints(scenario, n) {
+  const s = SCENARIOS[scenario];
+  const pts = [];
+  for(let i=0;i<n;i++) {
+    let v = (Math.random()-0.5)*2*s.waveNoise;
+    if(scenario==='unloading' || scenario==='wrongloc') {
+      if(i < n*0.15) v += Math.sin(i/3)*s.waveAmplitude*(1-i/(n*0.15));
+      v += (Math.random()-0.3)*s.waveAmplitude*0.4;
+    }
+    pts.push(v);
+  }
+  return pts;
+}
+
+// ── BAR CHART ──
+function initBars() {
+  const grid = document.getElementById('barGrid');
+  grid.innerHTML = '';
+  bars = [];
+  for(let i=0;i<BARS;i++) {
+    const b = document.createElement('div');
+    b.className = 'bar-col';
+    b.style.height = '4px';
+    grid.appendChild(b);
+    bars.push(b);
+  }
+}
+
+function updateBars(motionPct, frameIdx) {
+  const threshold = Math.floor(BARS * 0.6);
+  bars.forEach((b, i) => {
+    if(i <= frameIdx) {
+      const isMotion = Math.random() < (motionPct/100);
+      b.className = 'bar-col ' + (isMotion ? 'motion' : 'idle');
+      b.style.height = (20 + Math.random()*60) + 'px';
+    }
+  });
+}
+
+// ── MAIN SIMULATION ──
+async function runSimulation() {
+  if(running) return;
+  running = true;
+
+  const s = SCENARIOS[scenario];
+  const canvas = document.getElementById('waveCanvas');
+  canvas.width = canvas.offsetWidth;
+
+  document.getElementById('runBtn').disabled = true;
+  document.getElementById('statusPill').textContent = 'LIVE';
+  document.getElementById('statusPill').className = 'status-pill live';
+
+  // Reset
+  initBars();
+  wavePoints = [];
+  document.getElementById('scoreArc').style.strokeDashoffset = 245;
+  document.getElementById('scoreNum').textContent = '0';
+  document.getElementById('verdictStatus').className = 'verdict-status';
+  document.getElementById('verdictStatus').style.opacity = '0';
+  document.getElementById('pbarFill').style.width = '0%';
+  document.getElementById('pbarFill').className = 'pbar-fill';
+  document.getElementById('pbarPct').textContent = '0%';
+  document.getElementById('classLabel').textContent = 'Analysing...';
+  document.getElementById('classLabel').style.color = 'var(--text3)';
+  document.getElementById('locType').textContent = '—';
+  document.getElementById('locDesc').textContent = 'Awaiting halt classification...';
+  document.getElementById('ocrText').textContent = '—';
+  document.getElementById('stpTitle').textContent = '—';
+  document.getElementById('stpDesc').textContent = 'Cross-referencing dispatch data...';
+  document.getElementById('stpText').textContent = '—';
+  document.getElementById('verdictDesc').textContent = 'Run a scenario to see the confidence engine output.';
+  ['l1','l2','l3','l4'].forEach(l => setLayer(l,''));
+  setStep(0);
+
+  // STEP 0 — Halt trigger
+  addLog('Halt detected — vehicle stationary · GPS coordinates logged', 'log-blue');
+  addLog('Duration clock started — all 4 layers activating in parallel', 'log-blue');
+  document.getElementById('waveLabel').textContent = 'Halt detected — building activity profile...';
+  await sleep(600);
+
+  // L1
+  setLayer('l1','firing');
+  addLog('L1 — Unified coverage confirmed: wired GPS + portable GPS + activity sensor', 'log-blue');
+  await sleep(500);
+  setLayer('l1','done');
+
+  // STEP 1 — Waveform
+  setStep(1);
+  setLayer('l2','firing');
+  addLog('L2 — Activity sensing: recording activity sensor waveform...', 'log-blue');
+
+  const totalPts = 80;
+  const allPts = generateWavePoints(scenario, totalPts);
+  for(let i=0; i<totalPts; i++) {
+    wavePoints.push(allPts[i]);
+    drawWave(canvas, wavePoints, scenario);
+    await sleep(30);
+  }
+
+  document.getElementById('waveLabel').textContent = scenario==='idle'
+    ? 'Flat waveform — low amplitude motion detected'
+    : 'Active physical activity pattern — unloading signature detected';
+  addLog('L2 — Waveform complete: ' + (scenario==='idle' ? 'low amplitude — consistent with idle halt' : 'high amplitude — physical activity pattern confirmed'), scenario==='idle' ? 'log-amber' : 'log-green');
+
+  // STEP 2 — Rolling window
+  setStep(2);
+  addLog('L2 — Rolling window analysis: 20-min window · 1-min candles...', 'log-blue');
+
+  for(let i=0;i<BARS;i++) {
+    updateBars(s.positiveMotion, i);
+    const pct = Math.round((i/BARS)*s.positiveMotion*0.9 + (i/BARS)*10);
+    document.getElementById('pbarFill').style.width = pct + '%';
+    document.getElementById('pbarFill').className = 'pbar-fill' + (pct>=60?' green':'');
+    document.getElementById('pbarPct').textContent = pct + '%';
+    document.getElementById('pbarPct').className = 'ws-val' + (pct>=60?' green': pct<20?' red':' amber');
+    await sleep(80);
+  }
+
+  const finalPct = s.positiveMotion;
+  document.getElementById('pbarFill').style.width = finalPct + '%';
+  document.getElementById('pbarFill').className = 'pbar-fill' + (finalPct>=60?' green':'');
+  document.getElementById('pbarPct').textContent = finalPct + '%';
+
+  const classEl = document.getElementById('classLabel');
+  if(finalPct >= 60) {
+    classEl.textContent = 'ACTIVE UNLOADING DETECTED';
+    classEl.style.color = 'var(--green)';
+    addLog('L2 — ' + finalPct + '% positive motion · threshold 60% · ACTIVE UNLOADING confirmed', 'log-green');
+  } else {
+    classEl.textContent = 'IDLE / NO UNLOADING';
+    classEl.style.color = 'var(--amber)';
+    addLog('L2 — ' + finalPct + '% positive motion · below 60% threshold · IDLE HALT classified', 'log-amber');
+  }
+  setLayer('l2','done');
+
+  // STEP 3 — AI Visual verification
+  setStep(3);
+  setLayer('l3','firing');
+  addLog('L3 — AI visual verification: scanning 360° + satellite imagery...', 'log-blue');
+
+  document.getElementById('scanLine1').className = 'loc-scan-line active';
+  document.getElementById('scanLine2').className = 'loc-scan-line active';
+  await sleep(800);
+
+  document.getElementById('locType').textContent = s.locType;
+  document.getElementById('locDesc').textContent = s.locDesc;
+  addLog('L3 — Location type identified: ' + s.locType, 'log-blue');
+  await sleep(600);
+
+  // OCR typing effect
+  document.getElementById('ocrText').innerHTML = '<span class="ocr-cursor"></span>';
+  for(let i=0; i<s.ocrText.length; i++) {
+    await sleep(25);
+    document.getElementById('ocrText').innerHTML = `<span class="${s.ocrClass}">${s.ocrText.slice(0,i+1)}</span><span class="ocr-cursor"></span>`;
+  }
+  document.getElementById('ocrText').innerHTML = `<span class="${s.ocrClass}">${s.ocrText}</span>`;
+
+  addLog('L3 — OCR extraction complete: signboard text matched against Ship-to-Party', 'log-blue');
+  await sleep(500);
+
+  document.getElementById('stpTitle').textContent = s.stpTitle;
+  document.getElementById('stpDesc').textContent = s.stpDesc;
+  document.getElementById('stpText').innerHTML = `<span class="${s.stpClass}">${s.stpText}</span>`;
+
+  document.getElementById('scanLine1').className = 'loc-scan-line';
+  document.getElementById('scanLine2').className = 'loc-scan-line';
+  setLayer('l3','done');
+  addLog('L3 — Spatial context analysis complete', scenario==='unloading'?'log-green':scenario==='idle'?'log-amber':'log-red');
+
+  // STEP 4 — Confidence score
+  setLayer('l4','firing');
+  addLog('L4 — Confidence engine: aggregating all layer signals...', 'log-blue');
+  await sleep(400);
+
+  // Animate score
+  const targetScore = s.score;
+  const arcLen = 245;
+  for(let i=0; i<=targetScore; i++) {
+    document.getElementById('scoreNum').textContent = i;
+    const offset = arcLen - (arcLen * (i/100));
+    document.getElementById('scoreArc').style.strokeDashoffset = offset;
+    const col = i>=60 ? '#00C97A' : i>=30 ? '#F0A030' : '#E84040';
+    document.getElementById('scoreArc').style.stroke = col;
+    await sleep(18);
+  }
+
+  setLayer('l4','done');
+  addLog(`L4 — Confidence score: ${targetScore}/100 · ${targetScore>=60?'threshold met — CONFIRMED VALID UNLOADING':'below threshold — ALERT'}`, targetScore>=60?'log-green':'log-red');
+
+  // Verdict
+  const vs = document.getElementById('verdictStatus');
+  vs.className = 'verdict-status show ' + s.verdictClass;
+  document.getElementById('verdictLabel').textContent = s.verdictLabel;
+  document.getElementById('verdictDesc').textContent = s.verdictDesc;
+
+  document.getElementById('statusPill').textContent = 'Complete';
+  document.getElementById('statusPill').className = 'status-pill';
+  addLog('— Simulation complete · halt classified · ' + s.verdictLabel, targetScore>=60?'log-green':'log-red');
+
+  running = false;
+  document.getElementById('runBtn').disabled = false;
+  document.getElementById('runBtn').textContent = 'Run again →';
+}
+
+// ── SCENARIO SELECTION ──
+function selectScenario(sc) {
+  scenario = sc;
+  ['unloading','idle','wrongloc'].forEach(s => {
+    document.getElementById('btn-'+s).className = 'scenario-btn' + (s===sc?' active':'');
+  });
+  const s = SCENARIOS[sc];
+  const tag = document.getElementById('scenarioTag');
+  tag.textContent = s.tag;
+  tag.className = 'scenario-tag ' + s.tagClass;
+  document.getElementById('runBtn').textContent = 'Run simulation →';
+}
+
+// ── INIT ──
+initBars();
+selectScenario('unloading');
+const canvas = document.getElementById('waveCanvas');
+canvas.width = canvas.offsetWidth;
+</script>
+</body>
+</html>
