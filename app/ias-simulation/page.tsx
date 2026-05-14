@@ -1,22 +1,32 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import CTABanner from "@/components/CTABanner";
 
-export const metadata = {
-  title: "IAS Module Simulation — Intugine Activity Sensing | How It Works",
-  description:
-    "See exactly how Intugine's Activity Sensing (IAS) module detects unloading events in real time — waveform analysis, geofence validation, OCR confirmation, and confidence scoring. Interactive simulation for cement logistics.",
-};
-
 export default function IASSimulationPage() {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [iframeHeight, setIframeHeight] = useState(900);
+
+  useEffect(() => {
+    function handleMessage(e: MessageEvent) {
+      if (e.data && typeof e.data.iasHeight === "number") {
+        setIframeHeight(e.data.iasHeight + 32); // small buffer
+      }
+    }
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
+
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
+    <div className="min-h-screen bg-[#03080F] text-white">
       <Nav />
 
-      <main className="max-w-5xl mx-auto px-4 py-12">
+      <main className="max-w-5xl mx-auto px-4 py-10">
 
         {/* ── Header ── */}
-        <div className="mb-8">
+        <div className="mb-6">
           <span className="inline-block text-xs font-semibold tracking-widest uppercase text-[#3A8FF0] bg-[#1B6FD4]/10 border border-[#1B6FD4]/20 rounded-full px-4 py-1.5 mb-4">
             IAS Module · Interactive Simulation
           </span>
@@ -26,12 +36,11 @@ export default function IASSimulationPage() {
           <p className="text-white/50 text-base max-w-2xl">
             A live walkthrough of the IAS module — from raw sensor waveform capture through
             geofence validation, OCR confirmation, and final confidence score generation.
-            Step through each stage of a real cement truck unloading event.
           </p>
         </div>
 
         {/* ── Feature pills ── */}
-        <div className="flex flex-wrap gap-2 mb-8">
+        <div className="flex flex-wrap gap-2 mb-6">
           {[
             "Activity Waveform Analysis",
             "Geofence Validation",
@@ -48,20 +57,23 @@ export default function IASSimulationPage() {
           ))}
         </div>
 
-        {/* ── Simulation iframe ── */}
-        <div className="w-full rounded-xl overflow-hidden border border-white/10 mb-10 shadow-2xl">
+        {/* ── Simulation iframe — auto-height, no scroll ── */}
+        <div className="w-full rounded-xl overflow-hidden border border-[#132030] shadow-2xl mb-10">
           <iframe
+            ref={iframeRef}
             src="/ias-simulation.html"
-            className="w-full"
-            style={{ height: "820px", border: "none", background: "#03080F" }}
+            width="100%"
+            height={iframeHeight}
+            style={{ border: "none", background: "#03080F", display: "block" }}
             title="Intugine IAS Module Simulation"
+            scrolling="no"
             allow="autoplay"
           />
         </div>
 
-        {/* ── How IAS works — explainer ── */}
+        {/* ── 2-col explainer ── */}
         <div className="grid md:grid-cols-2 gap-6 mb-10">
-          <div className="bg-[#111] border border-white/10 rounded-xl p-6">
+          <div className="bg-[#080F1A] border border-[#132030] rounded-xl p-6">
             <h2 className="text-base font-bold text-white mb-3">What the IAS module detects</h2>
             <ul className="space-y-2 text-sm text-white/60">
               <li className="flex gap-2"><span className="text-[#00C97A] mt-0.5">✓</span> Back-unloading at unauthorised points before reaching the dealer</li>
@@ -70,13 +82,13 @@ export default function IASSimulationPage() {
               <li className="flex gap-2"><span className="text-[#00C97A] mt-0.5">✓</span> Vehicle substitution — different truck at delivery vs dispatch</li>
             </ul>
           </div>
-          <div className="bg-[#111] border border-white/10 rounded-xl p-6">
+          <div className="bg-[#080F1A] border border-[#132030] rounded-xl p-6">
             <h2 className="text-base font-bold text-white mb-3">The 4-layer validation system</h2>
             <ul className="space-y-2 text-sm text-white/60">
-              <li className="flex gap-2"><span className="text-[#3A8FF0] mt-0.5">01</span> <span><strong className="text-white">Activity sensing</strong> — sensor data captures physical unloading motion</span></li>
-              <li className="flex gap-2"><span className="text-[#3A8FF0] mt-0.5">02</span> <span><strong className="text-white">Geofence check</strong> — unloading must occur within dealer polygon</span></li>
-              <li className="flex gap-2"><span className="text-[#3A8FF0] mt-0.5">03</span> <span><strong className="text-white">OCR verification</strong> — vehicle number matched against dispatch record</span></li>
-              <li className="flex gap-2"><span className="text-[#3A8FF0] mt-0.5">04</span> <span><strong className="text-white">Confidence score</strong> — 0–100 score, alert triggered below threshold</span></li>
+              <li className="flex gap-2"><span className="text-[#3A8FF0] mt-0.5">01</span><span><strong className="text-white">Activity sensing</strong> — sensor data captures physical unloading motion</span></li>
+              <li className="flex gap-2"><span className="text-[#3A8FF0] mt-0.5">02</span><span><strong className="text-white">Geofence check</strong> — unloading must occur within dealer polygon</span></li>
+              <li className="flex gap-2"><span className="text-[#3A8FF0] mt-0.5">03</span><span><strong className="text-white">OCR verification</strong> — vehicle number matched against dispatch record</span></li>
+              <li className="flex gap-2"><span className="text-[#3A8FF0] mt-0.5">04</span><span><strong className="text-white">Confidence score</strong> — 0–100 score, alert triggered below threshold</span></li>
             </ul>
           </div>
         </div>

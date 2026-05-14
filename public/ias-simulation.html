@@ -896,5 +896,16 @@ selectScenario('unloading');
 const canvas = document.getElementById('waveCanvas');
 canvas.width = canvas.offsetWidth;
 </script>
+<script>
+// Auto-report height to parent for iframe resize
+function reportHeight() {
+  var h = document.documentElement.scrollHeight;
+  window.parent.postMessage({ iasHeight: h }, "*");
+}
+reportHeight();
+window.addEventListener("resize", reportHeight);
+var obs = new MutationObserver(reportHeight);
+obs.observe(document.body, { childList: true, subtree: true, attributes: true });
+</script>
 </body>
 </html>
