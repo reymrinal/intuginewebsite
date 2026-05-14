@@ -58,6 +58,12 @@ export default function Nav() {
             ROI Calculator
           </a>
           <a
+            href="https://library.intugine.com/ias-simulation"
+            style={{ color: "#374151", textDecoration: "none", fontSize: "0.9rem", fontWeight: 500 }}
+          >
+            IAS
+          </a>
+          <a
             href="https://www.intugine.com/schedule-demo?utm_source=library&utm_medium=nav&utm_campaign=library_nav&utm_content=get_demo_btn"
             onClick={handleDemoClick}
             style={{ background: "#1a3c8f", color: "#fff", padding: "0.5rem 1.25rem", borderRadius: 6, textDecoration: "none", fontSize: "0.9rem", fontWeight: 600 }}
