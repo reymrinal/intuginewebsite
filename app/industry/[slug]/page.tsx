@@ -30,6 +30,12 @@ const INDUSTRY_MAP: Record<string, { label: string; icon: string; color: string;
     color: "#0ea5e9",
     description: "End-to-end PTL and courier visibility for Indian enterprises — unified multi-carrier tracking, exception management, e-POD verification, and freight reconciliation via IntuParcel.",
   },
+  "metal-mining-coal": {
+    label: "Metal, Mining & Coal",
+    icon: "⛏️",
+    color: "#78716c",
+    description: "Mine-to-plant logistics visibility for coal, metal, and mining operations — real-time GPS tracking, activity sensing using sensors for pilferage detection, risk profiling, and 24x7 control tower.",
+  },
 };
 
 // Map industry label in DB to slug
@@ -38,7 +44,10 @@ const LABEL_TO_SLUG: Record<string, string> = {
   "Freight Marketplace": "freight-marketplace",
   "API Suite": "api-suite",
   "PTL/Courier Tracking": "ptl-courier-tracking",
+  "Metal, Mining & Coal": "metal-mining-coal",
 };
+
+export const dynamicParams = false;
 
 export async function generateStaticParams() {
   return Object.keys(INDUSTRY_MAP).map((slug) => ({ slug }));
