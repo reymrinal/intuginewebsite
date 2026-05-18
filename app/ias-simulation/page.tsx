@@ -12,7 +12,9 @@ export default function IASSimulationPage() {
   useEffect(() => {
     function handleMessage(e: MessageEvent) {
       if (e.data && typeof e.data.iasHeight === "number") {
-        setIframeHeight(e.data.iasHeight + 32); // small buffer
+        // Cap at 1400px to prevent runaway void below the simulation
+        const h = Math.min(e.data.iasHeight + 24, 1400);
+        setIframeHeight(h);
       }
     }
     window.addEventListener("message", handleMessage);
@@ -99,6 +101,30 @@ export default function IASSimulationPage() {
           slug="ias-simulation"
           industry="Cement"
         />
+
+        {/* ── Related Tools Navigation ── */}
+        <div style={{ marginTop: "2.5rem", marginBottom: "2rem" }}>
+          <p style={{ fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#4b5563", marginBottom: "1rem" }}>
+            Explore More Tools
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1rem" }}>
+            <a href="/roi-calculator" style={{ display: "block", background: "#0f172a", border: "1px solid #1e293b", borderRadius: 10, padding: "1.1rem 1.25rem", textDecoration: "none" }}>
+              <div style={{ fontSize: "1.25rem", marginBottom: "0.4rem" }}>📊</div>
+              <div style={{ color: "#fff", fontWeight: 700, fontSize: "0.92rem", marginBottom: "0.25rem" }}>Freight Loss ROI Calculator</div>
+              <div style={{ color: "#64748b", fontSize: "0.8rem" }}>Calculate back-unloading + grey market + KM debit savings</div>
+            </a>
+            <a href="/faq" style={{ display: "block", background: "#0f172a", border: "1px solid #1e293b", borderRadius: 10, padding: "1.1rem 1.25rem", textDecoration: "none" }}>
+              <div style={{ fontSize: "1.25rem", marginBottom: "0.4rem" }}>❓</div>
+              <div style={{ color: "#fff", fontWeight: 700, fontSize: "0.92rem", marginBottom: "0.25rem" }}>Frequently Asked Questions</div>
+              <div style={{ color: "#64748b", fontSize: "0.8rem" }}>Common questions on IAS, tracking, and supply chain visibility</div>
+            </a>
+            <a href="/cement-logistics-control-tower" style={{ display: "block", background: "#0f172a", border: "1px solid #1e293b", borderRadius: 10, padding: "1.1rem 1.25rem", textDecoration: "none" }}>
+              <div style={{ fontSize: "1.25rem", marginBottom: "0.4rem" }}>🏗️</div>
+              <div style={{ color: "#fff", fontWeight: 700, fontSize: "0.92rem", marginBottom: "0.25rem" }}>Cement Logistics Control Tower</div>
+              <div style={{ color: "#64748b", fontSize: "0.8rem" }}>End-to-end cement logistics visibility with 24×7 monitoring</div>
+            </a>
+          </div>
+        </div>
 
       </main>
 

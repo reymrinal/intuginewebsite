@@ -898,14 +898,20 @@ canvas.width = canvas.offsetWidth;
 </script>
 <script>
 // Auto-report height to parent for iframe resize
+// Uses body.offsetHeight (actual rendered height, not scrollable overflow)
+var _rhtimer = null;
 function reportHeight() {
-  var h = document.documentElement.scrollHeight;
-  window.parent.postMessage({ iasHeight: h }, "*");
+  clearTimeout(_rhtimer);
+  _rhtimer = setTimeout(function() {
+    var h = document.body.offsetHeight;
+    window.parent.postMessage({ iasHeight: h }, "*");
+  }, 80);
 }
 reportHeight();
 window.addEventListener("resize", reportHeight);
+// Observe only direct children of body to avoid runaway loops
 var obs = new MutationObserver(reportHeight);
-obs.observe(document.body, { childList: true, subtree: true, attributes: true });
+obs.observe(document.body, { childList: true, subtree: false, attributes: false });
 </script>
 </body>
 </html>
