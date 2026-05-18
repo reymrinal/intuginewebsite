@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Script from "next/script";
+import { DemoModalProvider } from "../components/DemoModalProvider";
 
-// ─── REPLACE THESE WITH YOUR ACTUAL IDs ───────────────────────────────────────
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID || "GTM-54STCR3F";
 const GA4_ID = process.env.NEXT_PUBLIC_GA4_ID || "G-02RR46VSFF";
 const GADS_ID = "AW-18094702433";
-// ──────────────────────────────────────────────────────────────────────────────
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://library.intugine.com"),
@@ -35,15 +34,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
-        {/* ── Bing Webmaster Verification ── */}
         <meta name="msvalidate.01" content="626E83BC5451E2AD7D7884954C359F91" />
-
-        {/* ── Favicons ── */}
         <link rel="icon" href="/favicon.ico" sizes="32x32" />
         <link rel="icon" href="/favicon.png" type="image/png" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
-        {/* ── Google Tag Manager — fires before anything else ── */}
         <Script
           id="gtm-init"
           strategy="beforeInteractive"
@@ -62,7 +57,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
 
-        {/* ── GA4 direct tag (backup if GTM isn't configured yet) ── */}
         <Script
           id="ga4-init"
           strategy="afterInteractive"
@@ -85,11 +79,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   dimension3: 'persona'
                 }
               });
-
-              // ── Google Ads tag ──────────────────────────────────
               gtag('config', '${GADS_ID}');
 
-              // ── Custom Event Helpers ──────────────────────────────
               window.trackDemoClick = function(source) {
                 gtag('event', 'demo_request_click', {
                   event_category: 'CTA',
@@ -97,7 +88,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   value: 1
                 });
               };
-
               window.trackCTAClick = function(cta_text, page_slug) {
                 gtag('event', 'cta_click', {
                   event_category: 'Engagement',
@@ -105,7 +95,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   page_slug: page_slug
                 });
               };
-
               window.trackPageRead = function(slug, industry, persona) {
                 gtag('event', 'page_read', {
                   event_category: 'Content',
@@ -114,7 +103,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   persona: persona
                 });
               };
-
               window.trackLibrarySearch = function(search_term) {
                 gtag('event', 'library_search', {
                   event_category: 'Search',
@@ -125,7 +113,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
 
-        {/* ── Google Ads tag (standalone load) ── */}
         <Script
           id="gads-init"
           strategy="afterInteractive"
@@ -133,7 +120,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
-        {/* ── GTM noscript fallback (required by Google) ── */}
         <noscript>
           <iframe
             src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
@@ -143,7 +129,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           />
         </noscript>
 
-        {children}
+        <DemoModalProvider>
+          {children}
+        </DemoModalProvider>
       </body>
     </html>
   );

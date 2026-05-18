@@ -1,15 +1,6 @@
 "use client";
 
-const DEMO_URL = "https://www.intugine.com/schedule-demo";
-
-function buildDemoUrl(source: string, medium: string, campaign: string, content?: string) {
-  const url = new URL(DEMO_URL);
-  url.searchParams.set("utm_source", source);
-  url.searchParams.set("utm_medium", medium);
-  url.searchParams.set("utm_campaign", campaign);
-  if (content) url.searchParams.set("utm_content", content);
-  return url.toString();
-}
+import { useModal } from "./DemoModalProvider";
 
 function fireEvent(eventName: string, params: Record<string, string>) {
   if (typeof window === "undefined") return;
@@ -22,6 +13,8 @@ function fireEvent(eventName: string, params: Record<string, string>) {
 }
 
 export default function CTABanner({ cta, slug, industry }: { cta?: string; slug?: string; industry?: string }) {
+  const { openModal } = useModal();
+
   const parts = cta?.split("|") ?? [];
   const ctaText = parts[0]?.trim() || "See How Intugine Works";
   const ctaAction = parts[1]?.trim() || "Book Demo";
@@ -29,8 +22,6 @@ export default function CTABanner({ cta, slug, industry }: { cta?: string; slug?
   const campaign = industry
     ? industry.toLowerCase().replace(/[^a-z0-9]+/g, "_") + "_library"
     : "library_content";
-
-  const href = buildDemoUrl("library", "content_cta", campaign, slug || "unknown");
 
   function handleClick() {
     fireEvent("cta_click", {
@@ -44,6 +35,11 @@ export default function CTABanner({ cta, slug, industry }: { cta?: string; slug?
       page_slug: slug || "unknown",
       industry: industry || "unknown",
       cta_position: "inline_banner",
+    });
+    openModal({
+      utmContent: slug || "unknown",
+      utmCampaign: campaign,
+      utmSource: "library",
     });
   }
 
@@ -59,8 +55,7 @@ export default function CTABanner({ cta, slug, industry }: { cta?: string; slug?
       <p style={{ color: "#bfdbfe", marginBottom: "1.5rem", fontSize: "1rem" }}>
         Join 75+ global enterprises using Intugine for real-time supply chain visibility.
       </p>
-      <a
-        href={href}
+      <button
         onClick={handleClick}
         style={{
           display: "inline-block",
@@ -69,18 +64,19 @@ export default function CTABanner({ cta, slug, industry }: { cta?: string; slug?
           padding: "0.85rem 2.5rem",
           borderRadius: 8,
           fontWeight: 700,
-          textDecoration: "none",
+          border: "none",
+          cursor: "pointer",
           fontSize: "1rem",
           transition: "opacity 0.2s",
         }}
       >
         {ctaAction} →
-      </a>
+      </button>
     </div>
   );
 }
 
-// Reusable tracked CTA link for use in other components
+// Reusable tracked CTA link — now opens modal
 export function TrackedDemoLink({
   children,
   source,
@@ -102,9 +98,10 @@ export function TrackedDemoLink({
   position: string;
   style?: React.CSSProperties;
 }) {
-  const href = buildDemoUrl(source, medium, campaign, content);
+  const { openModal } = useModal();
 
-  function handleClick() {
+  function handleClick(e: React.MouseEvent) {
+    e.preventDefault();
     fireEvent("cta_click", {
       event_category: "CTA",
       event_label: slug || content || "unknown",
@@ -118,10 +115,11 @@ export function TrackedDemoLink({
       industry: industry || "unknown",
       cta_position: position,
     });
+    openModal({ utmContent: content || slug || "unknown", utmCampaign: campaign, utmSource: source });
   }
 
   return (
-    <a href={href} onClick={handleClick} style={style}>
+    <a href="#" onClick={handleClick} style={style}>
       {children}
     </a>
   );
