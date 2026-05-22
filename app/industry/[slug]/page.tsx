@@ -36,6 +36,12 @@ const INDUSTRY_MAP: Record<string, { label: string; icon: string; color: string;
     color: "#78716c",
     description: "Mine-to-plant logistics visibility for coal, metal, and mining operations — real-time GPS tracking, activity sensing using sensors for pilferage detection, risk profiling, and 24x7 control tower.",
   },
+  "transporter": {
+    label: "Transporter",
+    icon: "🚛",
+    color: "#10b981",
+    description: "Free digital tools for transporters and small fleet owners — freight marketplace access, vehicle verification, and carbon emissions compliance under the ULIP PM GatiShakti initiative.",
+  },
 };
 
 // Map industry label in DB to slug
@@ -45,6 +51,7 @@ const LABEL_TO_SLUG: Record<string, string> = {
   "API Suite": "api-suite",
   "PTL/Courier Tracking": "ptl-courier-tracking",
   "Metal, Mining & Coal": "metal-mining-coal",
+  "Transporter": "transporter",
 };
 
 export const dynamicParams = false;

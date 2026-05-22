@@ -3,7 +3,7 @@ import { useState } from "react";
 import PageCard from "@/components/PageCard";
 import type { SEOPage } from "@/lib/api";
 
-const ACTIVE_INDUSTRIES = ["Cement", "Freight Marketplace", "API Suite", "PTL/Courier Tracking", "Metal, Mining & Coal"];
+const ACTIVE_INDUSTRIES = ["Cement", "Freight Marketplace", "API Suite", "PTL/Courier Tracking", "Metal, Mining & Coal", "Transporter"];
 
 const INDUSTRY_COLORS: Record<string, string> = {
   "Cement": "#f59e0b",
@@ -11,6 +11,7 @@ const INDUSTRY_COLORS: Record<string, string> = {
   "API Suite": "#6366f1",
   "PTL/Courier Tracking": "#0ea5e9",
   "Metal, Mining & Coal": "#78716c",
+  "Transporter": "#10b981",
   Default: "#1a3c8f",
 };
 
@@ -20,6 +21,7 @@ const INDUSTRY_ICONS: Record<string, string> = {
   "API Suite": "⚡",
   "PTL/Courier Tracking": "📦",
   "Metal, Mining & Coal": "⛏️",
+  "Transporter": "🚛",
   Default: "📄",
 };
 
@@ -29,6 +31,7 @@ const INDUSTRY_SLUGS: Record<string, string> = {
   "API Suite": "api-suite",
   "PTL/Courier Tracking": "ptl-courier-tracking",
   "Metal, Mining & Coal": "metal-mining-coal",
+  "Transporter": "transporter",
 };
 
 export default function LibraryIndex({ pages }: { pages: SEOPage[] }) {
