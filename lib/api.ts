@@ -2,8 +2,8 @@ const BACKEND_URL = "https://rey-6011d59d.base44.app/functions/getDashboardData"
 
 export interface SEOPage {
   id: string;
-  title: string;
   slug: string;
+  title: string;
   template_type: string;
   target_keyword: string;
   secondary_keywords?: string;
@@ -22,28 +22,45 @@ export interface SEOPage {
 
 const LIVE_STATUSES = ["reviewed", "published"];
 
+// ── Slim list: only metadata fields, no full_content/faq_block ──────────────
+// Used by generateStaticParams and the library index page.
+// Response is small (~50-100KB) — safely cacheable.
 export async function getAllPages(): Promise<SEOPage[]> {
   try {
     const res = await fetch(BACKEND_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({}),
-      next: { revalidate: 300 },
+      body: JSON.stringify({ action: "get_slugs" }),
+      next: { revalidate: 60 },
     });
     if (!res.ok) throw new Error(`Backend returned ${res.status}`);
     const data = await res.json();
     const pages: SEOPage[] = data.pages || [];
-    // Only serve pages with a slug AND an approved live status
     return pages.filter(p => p.slug && p.slug.trim() !== "" && LIVE_STATUSES.includes(p.status || ""));
   } catch (e) {
-    console.error("[getAllPages] Failed to fetch from backend:", e);
+    console.error("[getAllPages] Failed:", e);
     return [];
   }
 }
 
+// ── Full page by slug: fetches only the one page needed ──────────────────────
+// Used by generateMetadata and the page renderer.
+// Each call fetches ~10-30KB max — no caching issues.
 export async function getPageBySlug(slug: string): Promise<SEOPage | null> {
-  const pages = await getAllPages();
-  return pages.find(p => p.slug === slug) || null;
+  try {
+    const res = await fetch(BACKEND_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "get_page", slug }),
+      next: { revalidate: 60 },
+    });
+    if (!res.ok) throw new Error(`Backend returned ${res.status}`);
+    const data = await res.json();
+    return data.page || null;
+  } catch (e) {
+    console.error(`[getPageBySlug] Failed for slug=${slug}:`, e);
+    return null;
+  }
 }
 
 function renderMarkdownTable(tableBlock: string): string {
@@ -54,7 +71,6 @@ function renderMarkdownTable(tableBlock: string): string {
     line.split("|").map(c => c.trim()).filter((_, i, arr) => i > 0 && i < arr.length - 1);
 
   const headers = parseRow(lines[0]);
-  // lines[1] is the separator row (---|---|...), skip it
   const rows = lines.slice(2).map(parseRow);
 
   const headerHtml = headers.map(h => `<th style="padding:0.6rem 1rem;text-align:left;border-bottom:2px solid #e5e7eb;color:#0f2460;font-size:0.85rem;white-space:nowrap">${h}</th>`).join("");
@@ -68,7 +84,6 @@ function renderMarkdownTable(tableBlock: string): string {
 export function markdownToHtml(md: string): string {
   if (!md) return "";
 
-  // Pre-process: extract and replace markdown tables before line-by-line processing
   const tableRegex = /(\|.+\|\n\|[-| :]+\|\n(?:\|.+\|\n?)+)/g;
   const tables: string[] = [];
   const withPlaceholders = md.replace(tableRegex, (match) => {
@@ -91,7 +106,6 @@ export function markdownToHtml(md: string): string {
     .replace(/<p><\/p>/g, '')
     .trim();
 
-  // Restore tables
   tables.forEach((tableHtml, i) => {
     html = html.replace(`%%TABLE_${i}%%`, tableHtml);
   });
@@ -159,4 +173,3 @@ export function getReadingTime(content: string): number {
   const words = content?.split(/\s+/).length || 0;
   return Math.max(1, Math.ceil(words / 200));
 }
-// rebuild trigger Thu May  7 04:56:14 UTC 2026
