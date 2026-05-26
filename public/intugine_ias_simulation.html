@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Intugine IAS — Activity Sensing Simulation</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue: #185FA5;
+    --blue-dark: #042C53;
+    --blue-mid: #2474C4;
+    --blue-light: #EAF3FB;
+    --blue-border: #B5D4F4;
+    --green: #0F9E6E;
+    --green-light: #EAF6F1;
+    --green-border: #7DD4B8;
+    --amber: #E59A1A;
+    --amber-light: #FEF6E4;
+    --amber-border: #F5CC7A;
+    --red: #D93025;
+    --red-light: #FDECEA;
+    --red-border: #F5A9A6;
+    --text: #0d1b2e;
+    --text2: #4A5568;
+    --text3: #8896a7;
+    --border: #E2E8F0;
+    --bg: #F7F9FC;
+    --white: #FFFFFF;
+    --radius: 8px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,sans-serif;font-size:14px;line-height:1.5}
+
+  /* Nav */
+  .nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;height:52px;position:sticky;top:0;z-index:100}
+  .nav-logo{font-size:17px;font-weight:800;color:var(--blue-dark);letter-spacing:-0.5px}
+  .nav-logo b{color:var(--blue)}
+  .nav-links{display:flex;gap:24px;margin-left:28px}
+  .nav-link{font-size:13px;color:var(--text2);text-decoration:none;font-weight:500}
+  .nav-link:hover{color:var(--blue)}
+  .nav-cta{margin-left:auto;font-size:12px;font-weight:600;padding:7px 16px;border-radius:6px;background:var(--blue);color:white;text-decoration:none;border:none;cursor:pointer;transition:background .15s}
+  .nav-cta:hover{background:var(--blue-mid)}
+
+  .page{max-width:860px;margin:0 auto;padding:28px 20px 60px}
+
+  /* Page header */
+  .pg-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+  .ias-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:4px;background:var(--blue-light);color:var(--blue);border:1px solid var(--blue-border);text-transform:uppercase;letter-spacing:.04em;margin-bottom:7px}
+  .pg-title{font-size:20px;font-weight:700;color:var(--text);letter-spacing:-.3px;margin-bottom:3px}
+  .pg-desc{font-size:13px;color:var(--text2)}
+  .status-pill{font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;border:1px solid var(--border);color:var(--text3);background:var(--white);white-space:nowrap}
+  .status-pill.live{border-color:var(--green-border);color:var(--green);background:var(--green-light);animation:liveblink 1.5s infinite}
+  .status-pill.done{border-color:var(--blue-border);color:var(--blue);background:var(--blue-light)}
+  @keyframes liveblink{0%,100%{opacity:1}50%{opacity:.5}}
+
+  /* Scenario row */
+  .sc-row{display:flex;align-items:center;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+  .sc-label{font-size:12px;font-weight:500;color:var(--text3);margin-right:2px}
+  .sc-btn{font-size:12px;font-weight:500;padding:7px 13px;border-radius:6px;border:1px solid var(--border);background:var(--white);color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s}
+  .sc-btn:hover{border-color:var(--blue);color:var(--blue)}
+  .sc-btn.ag{border-color:var(--green);color:var(--green);background:var(--green-light)}
+  .sc-btn.aa{border-color:var(--amber);color:var(--amber);background:var(--amber-light)}
+  .sc-btn.ar{border-color:var(--red);color:var(--red);background:var(--red-light)}
+  .sc-dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+  .run-btn{margin-left:auto;font-size:13px;font-weight:600;padding:8px 20px;border-radius:6px;border:none;background:var(--blue);color:white;cursor:pointer;transition:background .15s;letter-spacing:-.1px}
+  .run-btn:hover{background:var(--blue-mid)}
+  .run-btn:disabled{background:var(--border);color:var(--text3);cursor:not-allowed}
+
+  /* Steps */
+  .steps{display:flex;gap:5px;margin-bottom:14px}
+  .step{flex:1;height:4px;border-radius:2px;background:var(--border);transition:background .4s}
+  .step.active{background:var(--blue)}
+  .step.done{background:var(--green)}
+
+  /* Layer badges */
+  .layers{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+  .lb{font-size:11px;font-weight:500;padding:3px 10px;border-radius:4px;border:1px solid var(--border);color:var(--text3);background:var(--white);transition:all .4s}
+  .lb.firing{border-color:var(--blue-border);color:var(--blue);background:var(--blue-light)}
+  .lb.done{border-color:var(--green-border);color:var(--green);background:var(--green-light)}
+
+  /* Card */
+  .card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:10px}
+  .card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .card-lbl{font-size:11px;font-weight:600;color:var(--text3);letter-spacing:.05em;text-transform:uppercase}
+  .card-tag{font-size:10px;font-weight:600;padding:2px 8px;border-radius:4px;background:var(--blue-light);color:var(--blue);border:1px solid var(--blue-border)}
+  .card-tag.g{background:var(--green-light);color:var(--green);border-color:var(--green-border)}
+
+  /* Wave */
+  #waveCanvas{width:100%;height:96px;display:block;background:var(--bg);border-radius:4px;border:1px solid var(--border)}
+  .wave-foot{display:flex;justify-content:space-between;margin-top:5px;font-size:11px;color:var(--text3)}
+  .wave-mid{color:var(--blue);font-weight:500}
+
+  /* Bars */
+  .bar-grid{display:flex;align-items:flex-end;gap:3px;height:68px;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:5px 5px 0;margin-bottom:8px}
+  .bcol{flex:1;min-width:5px;background:var(--border);border-radius:2px 2px 0 0;height:4px;transition:height .3s,background .3s}
+  .bcol.m{background:var(--green)}
+  .bcol.i{background:#CBD5E0}
+
+  /* Progress */
+  .prow{display:flex;align-items:center;gap:10px;padding:9px 13px;background:var(--bg);border:1px solid var(--border);border-radius:6px;margin-bottom:7px}
+  .prow-lbl{font-size:12px;color:var(--text2);min-width:150px}
+  .ptrack{flex:1;height:6px;background:var(--border);border-radius:3px;position:relative}
+  .pfill{height:6px;border-radius:3px;background:var(--blue);transition:width .3s,background .3s;width:0%}
+  .pfill.g{background:var(--green)}
+  .tline{position:absolute;top:-4px;left:60%;width:2px;height:14px;background:var(--amber);border-radius:1px}
+  .tlabel{position:absolute;top:-18px;left:60%;transform:translateX(-50%);font-size:9px;font-weight:600;color:var(--amber);white-space:nowrap}
+  .pval{font-size:13px;font-weight:600;color:var(--text);min-width:34px;text-align:right}
+  .pval.g{color:var(--green)}.pval.a{color:var(--amber)}.pval.r{color:var(--red)}
+
+  .crow{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:var(--bg);border:1px solid var(--border);border-radius:6px}
+  .crow-lbl{font-size:12px;color:var(--text2)}
+  .crow-val{font-size:13px;font-weight:600;color:var(--text3)}
+  .crow-val.g{color:var(--green)}.crow-val.a{color:var(--amber)}.crow-val.r{color:var(--red)}
+
+  /* Location */
+  .loc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .lcard{border:1px solid var(--border);border-radius:6px;padding:14px;background:var(--bg);position:relative;overflow:hidden}
+  .lcard-lbl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+  .lcard-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:3px}
+  .lcard-sub{font-size:12px;color:var(--text2);line-height:1.5}
+  .ocr{margin-top:8px;padding:8px 10px;background:var(--white);border:1px solid var(--border);border-radius:4px;font-size:12px;font-weight:500;color:var(--text2);min-height:30px;font-family:'SF Mono','Consolas',monospace}
+  .om{color:var(--green)}.ox{color:var(--red)}
+  .ocursor{display:inline-block;width:6px;height:11px;background:var(--blue);animation:blink .7s infinite;vertical-align:middle}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+  .scanl{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--blue-mid),transparent);top:0;animation:scananim 1.8s linear infinite;opacity:0;transition:opacity .3s}
+  .scanl.on{opacity:.5}
+  @keyframes scananim{0%{top:0%}100%{top:100%}}
+
+  /* Confidence */
+  .conf{display:flex;align-items:center;gap:22px}
+  .score-wrap{position:relative;width:86px;height:86px;flex-shrink:0}
+  .score-svg{width:86px;height:86px;transform:rotate(-90deg)}
+  .score-bg{fill:none;stroke:var(--border);stroke-width:7}
+  .score-arc{fill:none;stroke:var(--green);stroke-width:7;stroke-linecap:round;stroke-dasharray:234;stroke-dashoffset:234;transition:stroke-dashoffset 1.4s cubic-bezier(.4,0,.2,1),stroke .4s}
+  .score-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .score-n{font-size:22px;font-weight:700;color:var(--text);line-height:1}
+  .score-s{font-size:9px;font-weight:500;color:var(--text3);letter-spacing:.04em;margin-top:1px}
+
+  .vwrap{flex:1}
+  .vchip{display:inline-flex;align-items:center;gap:7px;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;border:1px solid var(--border);color:var(--text3);background:var(--white);margin-bottom:8px;opacity:0;transition:opacity .5s}
+  .vchip.show{opacity:1}
+  .vchip.vc{border-color:var(--green-border);color:var(--green);background:var(--green-light)}
+  .vchip.va{border-color:var(--red-border);color:var(--red);background:var(--red-light)}
+  .vchip.vr{border-color:var(--amber-border);color:var(--amber);background:var(--amber-light)}
+  .vdot{width:7px;height:7px;border-radius:50%;background:currentColor;animation:blink 1.2s infinite}
+  .vdesc{font-size:13px;color:var(--text2);line-height:1.6}
+
+  /* Log */
+  .logwrap{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:9px 12px;font-size:11px;font-family:'SF Mono','Consolas',monospace;line-height:1.9;color:var(--text2);max-height:104px;overflow-y:auto}
+  .ll{display:flex;gap:10px}
+  .lt{color:var(--text3);flex-shrink:0}
+  .lb2{color:var(--blue)}.lg{color:var(--green)}.la{color:var(--amber)}.lr{color:var(--red)}
+
+  @media(max-width:560px){
+    .loc-grid{grid-template-columns:1fr}
+    .sc-row{flex-direction:column;align-items:flex-start}
+    .run-btn{margin-left:0;width:100%}
+    .nav-links{display:none}
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">Intugine<b>.</b></div>
+  <div class="nav-links">
+    <a href="https://www.intugine.com" class="nav-link">Solutions</a>
+    <a href="https://www.intugine.com" class="nav-link">Industries</a>
+    <a href="https://library.intugine.com" class="nav-link">Library</a>
+  </div>
+  <a href="https://www.intugine.com/schedule-demo" class="nav-cta">Get a Demo</a>
+</nav>
+
+<div class="page">
+
+  <div class="pg-header">
+    <div>
+      <div class="ias-chip">
+        <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><circle cx="4.5" cy="4.5" r="3.5" stroke="currentColor" stroke-width="1.2"/><circle cx="4.5" cy="4.5" r="1.4" fill="currentColor"/></svg>
+        IAS Module
+      </div>
+      <div class="pg-title">Activity Sensing Engine — Live Simulation</div>
+      <div class="pg-desc">See how Intugine classifies every vehicle halt in real time — confirmed delivery, idle stop, or back-unloading alert.</div>
+    </div>
+    <div id="sp" class="status-pill">Ready</div>
+  </div>
+
+  <div class="sc-row">
+    <span class="sc-label">Scenario:</span>
+    <button class="sc-btn ag" id="bu" onclick="sel('unloading')"><span class="sc-dot"></span>Confirmed unloading</button>
+    <button class="sc-btn" id="bi" onclick="sel('idle')"><span class="sc-dot"></span>Idle / no activity</button>
+    <button class="sc-btn" id="bw" onclick="sel('wrongloc')"><span class="sc-dot"></span>Wrong location alert</button>
+    <button class="run-btn" id="rb" onclick="run()">Run simulation →</button>
+  </div>
+
+  <div class="steps">
+    <div class="step active" id="s0"></div>
+    <div class="step" id="s1"></div>
+    <div class="step" id="s2"></div>
+    <div class="step" id="s3"></div>
+  </div>
+
+  <div class="layers">
+    <div class="lb" id="l1">L1 — Unified coverage</div>
+    <div class="lb" id="l2">L2 — Activity sensing</div>
+    <div class="lb" id="l3">L3 — AI visual verification</div>
+    <div class="lb" id="l4">L4 — Confidence engine</div>
+  </div>
+
+  <!-- Waveform -->
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-lbl">Layer 2 — Activity sensor waveform</div>
+      <div class="card-tag" id="wtag">Awaiting halt</div>
+    </div>
+    <canvas id="waveCanvas" height="96"></canvas>
+    <div class="wave-foot">
+      <span>t = 0 min</span>
+      <span class="wave-mid" id="ws">Waiting for halt trigger...</span>
+      <span>t = 20 min</span>
+    </div>
+  </div>
+
+  <!-- Rolling window -->
+  <div class="card">
+    <div class="card-hdr"><div class="card-lbl">Rolling window — 20-min · 1-min intervals</div></div>
+    <div class="bar-grid" id="bg"></div>
+    <div class="prow">
+      <span class="prow-lbl">Positive activity packets</span>
+      <div class="ptrack">
+        <div class="tlabel">60% threshold</div>
+        <div class="tline"></div>
+        <div class="pfill" id="pf"></div>
+      </div>
+      <span class="pval" id="pv">0%</span>
+    </div>
+    <div class="crow">
+      <span class="crow-lbl">Window classification</span>
+      <span class="crow-val" id="cv">Analysing...</span>
+    </div>
+  </div>
+
+  <!-- AI Visual -->
+  <div class="card">
+    <div class="card-hdr"><div class="card-lbl">Layer 3 — AI visual verification + spatial context</div></div>
+    <div class="loc-grid">
+      <div class="lcard">
+        <div class="scanl" id="sc1"></div>
+        <div class="lcard-lbl">360° imagery scan</div>
+        <div class="lcard-title" id="lt">—</div>
+        <div class="lcard-sub" id="ld">Awaiting classification...</div>
+        <div class="ocr"><span id="ot">—</span></div>
+      </div>
+      <div class="lcard">
+        <div class="scanl" id="sc2"></div>
+        <div class="lcard-lbl">Ship-to-party verification</div>
+        <div class="lcard-title" id="st">—</div>
+        <div class="lcard-sub" id="sd">Cross-referencing dispatch data...</div>
+        <div class="ocr"><span id="sv">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confidence -->
+  <div class="card">
+    <div class="card-hdr"><div class="card-lbl">Layer 4 — Confidence engine output</div></div>
+    <div class="conf">
+      <div class="score-wrap">
+        <svg class="score-svg" viewBox="0 0 86 86">
+          <circle class="score-bg" cx="43" cy="43" r="37"/>
+          <circle class="score-arc" id="sa" cx="43" cy="43" r="37"/>
+        </svg>
+        <div class="score-inner">
+          <div class="score-n" id="sn">0</div>
+          <div class="score-s">/ 100</div>
+        </div>
+      </div>
+      <div class="vwrap">
+        <div class="vchip" id="vc"><div class="vdot"></div><span id="vl">—</span></div>
+        <div class="vdesc" id="vd">Select a scenario and run the simulation to see the output.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Log -->
+  <div class="card">
+    <div class="card-hdr" style="margin-bottom:10px"><div class="card-lbl">System log</div></div>
+    <div class="logwrap" id="log">
+      <div class="ll"><span class="lt">00:00:00</span><span class="lb2">IAS module ready — select a scenario and run simulation</span></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const SC = {
+  unloading:{bc:'ag',wa:.65,wn:.28,pm:78,lt:'Cement retail dealer',ld:'Stacked cement bags detected. Authorised dealer signage visible. Dealer context confirmed.',ot:'ACC CEMENT · AUTHORISED DEALER · JYOTI TEMGORE SG',oc:'om',st:'Ship-to-party matched',sd:'OCR text cross-referenced against dispatch consignee — dealer confirmed.',sv:'JYOTI TEMGORE SG · MATCH ✓',sc:'om',score:87,vc:'vc',vl:'✓ Confirmed valid unloading',vd:'All 4 layers confirm active physical unloading at the correct authorised dealer location. Automated freight debit triggered.',wb:'Active pattern',wbc:'g',ws:'Active physical activity — unloading signature confirmed'},
+  idle:{bc:'aa',wa:.06,wn:.04,pm:11,lt:'Fuel station',ld:'Petrol pump canopy detected. Fuel dispenser context. No cement dealer context visible.',ot:'HP PETROL PUMP · NH-44 · RASOOLPUR',oc:'ox',st:'No dealer match',sd:'Location classified as routine halt — fuel or rest stop. Not a delivery event.',sv:'NO CEMENT CONTEXT — ROUTINE HALT',sc:'ox',score:9,vc:'vr',vl:'⛟ Routine halt — no unloading',vd:'Activity below threshold. Location confirmed as fuel/rest stop. Not counted as a delivery event. Trip continues.',wb:'Flat — no activity',wbc:'',ws:'Low amplitude — idle halt, no physical activity detected'},
+  wrongloc:{bc:'ar',wa:.60,wn:.22,pm:72,lt:'Dealer — wrong territory',ld:'Cement bags and dealer signage detected. Location is Punjab. Dispatch planned for Haryana dealer.',ot:'SARABJIT SINGH · IRON & TIMBER · RASOOLPUR, TARANTARAN',oc:'ox',st:'Ship-to-party MISMATCH',sd:'Physical location is Punjab (Tarantaran). Dispatch was for Haryana dealer. Territory deviation flagged.',sv:'MISMATCH — TERRITORY DEVIATION ✗',sc:'ox',score:21,vc:'va',vl:'⚠ Back-unloading — wrong location',vd:'Physical unloading confirmed but at wrong territory dealer. State border deviation detected — possible grey market diversion. Control tower alerted.',wb:'Active — location mismatch',wbc:'',ws:'Active physical activity detected — but location mismatch flagged'}
+};
+
+let scenario='unloading', running=false, bars=[], BARS=20;
+
+function gt(){return new Date().toTimeString().slice(0,8)}
+function log(msg,cls){const l=document.getElementById('log');const d=document.createElement('div');d.className='ll';d.innerHTML=`<span class="lt">${gt()}</span><span class="${cls||'lb2'}">${msg}</span>`;l.appendChild(d);l.scrollTop=l.scrollHeight}
+function setStep(n){for(let i=0;i<4;i++){const s=document.getElementById('s'+i);s.className='step'+(i<n?' done':i===n?' active':'')}}
+function setL(id,st){document.getElementById(id).className='lb'+(st==='f'?' firing':st==='d'?' done':'')}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+
+function initBars(){const g=document.getElementById('bg');g.innerHTML='';bars=[];for(let i=0;i<BARS;i++){const b=document.createElement('div');b.className='bcol';b.style.height='4px';g.appendChild(b);bars.push(b)}}
+
+function drawWave(canvas,pts,sc){
+  const ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#F7F9FC';ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='#E2E8F0';ctx.lineWidth=1;
+  for(let y=H/4;y<H;y+=H/4){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+  ctx.strokeStyle='#CBD5E0';ctx.beginPath();ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.stroke();
+  if(pts.length<2)return;
+  const col=sc==='idle'?'#9BBFDF':'#185FA5';
+  ctx.strokeStyle=col;ctx.lineWidth=1.8;ctx.shadowColor=col;ctx.shadowBlur=4;
+  ctx.beginPath();pts.forEach((p,i)=>{const x=(i/(pts.length-1))*W,y=H/2-p*(H/2.4);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.stroke();ctx.shadowBlur=0;
+  ctx.fillStyle='rgba(24,95,165,0.07)';ctx.beginPath();pts.forEach((p,i)=>{const x=(i/(pts.length-1))*W,y=H/2-p*(H/2.4);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.lineTo(W,H/2);ctx.lineTo(0,H/2);ctx.closePath();ctx.fill();
+}
+
+function genPts(sc,n){const s=SC[sc];const pts=[];for(let i=0;i<n;i++){let v=(Math.random()-.5)*2*s.wn;if(sc!=='idle'){if(i<n*.12)v+=Math.sin(i/2.5)*s.wa*(1-i/(n*.12));v+=(Math.random()-.3)*s.wa*.35}pts.push(v)}return pts}
+
+async function run(){
+  if(running)return;running=true;
+  const s=SC[scenario];
+  const cv=document.getElementById('waveCanvas');cv.width=cv.offsetWidth;
+  document.getElementById('rb').disabled=true;
+  document.getElementById('sp').textContent='LIVE';document.getElementById('sp').className='status-pill live';
+  initBars();
+  document.getElementById('sa').style.strokeDashoffset=234;document.getElementById('sa').style.stroke='#0F9E6E';
+  document.getElementById('sn').textContent='0';
+  document.getElementById('vc').className='vchip';document.getElementById('vc').style.opacity='0';
+  document.getElementById('pf').style.width='0%';document.getElementById('pf').className='pfill';
+  document.getElementById('pv').textContent='0%';document.getElementById('pv').className='pval';
+  document.getElementById('cv').textContent='Analysing...';document.getElementById('cv').className='crow-val';
+  document.getElementById('lt').textContent='—';document.getElementById('ld').textContent='Awaiting classification...';
+  document.getElementById('ot').textContent='—';document.getElementById('st').textContent='—';
+  document.getElementById('sd').textContent='Cross-referencing dispatch data...';document.getElementById('sv').textContent='—';
+  document.getElementById('vd').textContent='Processing...';
+  document.getElementById('ws').textContent='Halt detected — building activity profile...';
+  const wtag=document.getElementById('wtag');wtag.textContent='Recording...';wtag.className='card-tag';
+  ['l1','l2','l3','l4'].forEach(l=>setL(l,''));setStep(0);drawWave(cv,[],scenario);
+
+  log('Halt detected — vehicle stationary. GPS coordinates locked. Duration clock started.','lb2');
+  log('All 4 intelligence layers activating in parallel...','lb2');
+  await sleep(500);setL('l1','f');
+  log('L1 — Unified coverage: wired GPS + portable GPS + activity sensor data confirmed','lb2');
+  await sleep(600);setL('l1','d');
+
+  setStep(1);setL('l2','f');log('L2 — Activity sensor: recording physical activity pattern...','lb2');
+  const pts=genPts(scenario,80),drawn=[];
+  for(let i=0;i<80;i++){drawn.push(pts[i]);drawWave(cv,drawn,scenario);await sleep(28)}
+  document.getElementById('ws').textContent=s.ws;
+  wtag.textContent=s.wb;wtag.className='card-tag'+(s.wbc?' '+s.wbc:'');
+  log('L2 — Waveform complete: '+(scenario==='idle'?'low amplitude — idle halt':'activity pattern detected'),scenario==='idle'?'la':'lg');
+
+  setStep(2);log('L2 — Rolling window: analysing 20 activity packets...','lb2');
+  for(let i=0;i<BARS;i++){
+    bars[i].style.height=(20+Math.random()*52)+'px';
+    const m=Math.random()<(s.pm/100);bars[i].className='bcol '+(m?'m':'i');
+    const p=Math.round((i/BARS)*s.pm*.85+(i/BARS)*8);
+    document.getElementById('pf').style.width=p+'%';document.getElementById('pf').className='pfill'+(p>=60?' g':'');
+    document.getElementById('pv').textContent=p+'%';document.getElementById('pv').className='pval'+(p>=60?' g':p<20?' r':' a');
+    await sleep(85);
+  }
+  document.getElementById('pf').style.width=s.pm+'%';document.getElementById('pf').className='pfill'+(s.pm>=60?' g':'');
+  document.getElementById('pv').textContent=s.pm+'%';document.getElementById('pv').className='pval'+(s.pm>=60?' g':' a');
+  const cvEl=document.getElementById('cv');
+  if(s.pm>=60){cvEl.textContent='ACTIVE UNLOADING DETECTED';cvEl.className='crow-val g';log(`L2 — ${s.pm}% positive activity · threshold 60% · ACTIVE UNLOADING confirmed`,'lg')}
+  else{cvEl.textContent='IDLE / NO UNLOADING';cvEl.className='crow-val a';log(`L2 — ${s.pm}% positive activity · below 60% threshold · IDLE HALT`,'la')}
+  setL('l2','d');
+
+  setStep(3);setL('l3','f');log('L3 — AI visual verification: scanning 360° imagery and nearby place APIs...','lb2');
+  document.getElementById('sc1').className='scanl on';document.getElementById('sc2').className='scanl on';
+  await sleep(700);
+  document.getElementById('lt').textContent=s.lt;document.getElementById('ld').textContent=s.ld;
+  log('L3 — Location type identified: '+s.lt,'lb2');await sleep(500);
+  document.getElementById('ot').innerHTML='<span class="ocursor"></span>';
+  for(let i=0;i<s.ot.length;i++){await sleep(22);document.getElementById('ot').innerHTML=`<span class="${s.oc}">${s.ot.slice(0,i+1)}</span><span class="ocursor"></span>`}
+  document.getElementById('ot').innerHTML=`<span class="${s.oc}">${s.ot}</span>`;
+  log('L3 — OCR extraction complete: signboard text matched against Ship-to-Party','lb2');await sleep(400);
+  document.getElementById('st').textContent=s.st;document.getElementById('sd').textContent=s.sd;
+  document.getElementById('sv').innerHTML=`<span class="${s.sc}">${s.sv}</span>`;
+  document.getElementById('sc1').className='scanl';document.getElementById('sc2').className='scanl';
+  setL('l3','d');log('L3 — Spatial context complete',scenario==='unloading'?'lg':scenario==='idle'?'la':'lr');
+
+  setL('l4','f');log('L4 — Confidence engine: aggregating all layer signals...','lb2');await sleep(350);
+  const arc=234;
+  for(let i=0;i<=s.score;i++){
+    document.getElementById('sn').textContent=i;
+    document.getElementById('sa').style.strokeDashoffset=arc-(arc*(i/100));
+    document.getElementById('sa').style.stroke=i>=60?'#0F9E6E':i>=30?'#E59A1A':'#D93025';
+    await sleep(16);
+  }
+  setL('l4','d');log(`L4 — Confidence score: ${s.score}/100 · ${s.score>=60?'CONFIRMED VALID UNLOADING':'ALERT'}`,s.score>=60?'lg':'lr');
+
+  const vce=document.getElementById('vc');
+  vce.className='vchip show '+s.vc;
+  document.getElementById('vl').textContent=s.vl;document.getElementById('vd').textContent=s.vd;
+  document.getElementById('sp').textContent='Complete';document.getElementById('sp').className='status-pill done';
+  log('— Simulation complete · '+s.vl,s.score>=60?'lg':scenario==='idle'?'la':'lr');
+
+  running=false;document.getElementById('rb').disabled=false;document.getElementById('rb').textContent='Run again →';
+}
+
+function sel(sc){
+  scenario=sc;
+  [['bu','unloading'],['bi','idle'],['bw','wrongloc']].forEach(([id,s])=>{
+    document.getElementById(id).className='sc-btn'+(s===sc?' '+SC[s].bc:'');
+  });
+  document.getElementById('rb').textContent='Run simulation →';
+}
+
+initBars();sel('unloading');
+const c=document.getElementById('waveCanvas');c.width=c.offsetWidth;
+</script>
+</body>
+</html>
