@@ -45,7 +45,7 @@ export default function PageCard({ page }: { page: SEOPage }) {
         }}>
           {getTemplateLabel(page.template_type)}
         </span>
-        <span style={{ fontSize: "0.75rem", color: "#9ca3af" }}>{page.funnel_stage}</span>
+
       </div>
       <h3 style={{ margin: "0 0 0.5rem", fontSize: "0.95rem", fontWeight: 600, color: "#0f2460", lineHeight: 1.4 }}>
         {page.title.replace(/ \| Intugine$/, "")}

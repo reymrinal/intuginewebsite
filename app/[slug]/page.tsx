@@ -51,11 +51,6 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
-const FUNNEL_COLORS: Record<string, string> = {
-  TOFU: "#10b981",
-  MOFU: "#f59e0b",
-  BOFU: "#ef4444",
-};
 
 export default async function PageDetail({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -109,11 +104,7 @@ export default async function PageDetail({ params }: { params: Promise<{ slug: s
                   {page.industry}
                 </span>
               )}
-              {page.funnel_stage && (
-                <span style={{ background: FUNNEL_COLORS[page.funnel_stage] || "#6b7280", color: "#fff", padding: "0.25rem 0.65rem", borderRadius: 6, fontSize: "0.72rem", fontWeight: 600 }}>
-                  {page.funnel_stage}
-                </span>
-              )}
+
             </div>
             <h1 style={{ color: "#0f2460", fontSize: "2.1rem", fontWeight: 800, lineHeight: 1.2, margin: "0 0 1rem" }}>
               {h1}
@@ -149,7 +140,7 @@ export default async function PageDetail({ params }: { params: Promise<{ slug: s
                   {[
                     { label: "Industry", value: page.industry },
                     { label: "Audience", value: page.persona },
-                    { label: "Stage", value: page.funnel_stage },
+
                     { label: "Read time", value: `${readingTime} min` },
                   ].filter(i => i.value).map(item => (
                     <div key={item.label}>
