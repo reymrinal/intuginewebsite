@@ -87,7 +87,7 @@ export default function IASSimulationPage() {
           <div className="bg-[#080F1A] border border-[#132030] rounded-xl p-6">
             <h2 className="text-base font-bold text-white mb-3">The 4-layer validation system</h2>
             <ul className="space-y-2 text-sm text-white/60">
-              <li className="flex gap-2"><span className="text-[#3A8FF0] mt-0.5">01</span><span><strong className="text-white">Activity sensing</strong> — sensor data captures physical unloading motion</span></li>
+              <li className="flex gap-2"><span className="text-[#3A8FF0] mt-0.5">01</span><span><strong className="text-white">Activity sensing</strong> — sensor data captures physical unloading activity</span></li>
               <li className="flex gap-2"><span className="text-[#3A8FF0] mt-0.5">02</span><span><strong className="text-white">Geofence check</strong> — unloading must occur within dealer polygon</span></li>
               <li className="flex gap-2"><span className="text-[#3A8FF0] mt-0.5">03</span><span><strong className="text-white">OCR verification</strong> — vehicle number matched against dispatch record</span></li>
               <li className="flex gap-2"><span className="text-[#3A8FF0] mt-0.5">04</span><span><strong className="text-white">Confidence score</strong> — 0–100 score, alert triggered below threshold</span></li>

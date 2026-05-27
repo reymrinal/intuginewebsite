@@ -147,7 +147,7 @@
     transition: height 0.3s, background 0.3s;
     height: 4px;
   }
-  .bar-col.motion { background: var(--green); }
+  .bar-col.activity { background: var(--green); }
   .bar-col.idle { background: var(--text3); }
 
   /* WINDOW STATUS */
@@ -438,7 +438,7 @@
     <div class="layer-tag" id="l4">L4 — Confidence engine</div>
   </div>
 
-  <!-- PANEL 1: Motion waveform -->
+  <!-- PANEL 1: Activity waveform -->
   <div class="panel">
     <div class="panel-label">Layer 2 — Activity sensor waveform (activity sensor)</div>
     <canvas id="waveCanvas" height="120"></canvas>
@@ -454,7 +454,7 @@
     <div class="panel-label">Rolling window analysis — 20-min window · 1-min candles</div>
     <div class="bar-grid" id="barGrid"></div>
     <div class="window-status">
-      <span class="ws-label">Positive motion packets</span>
+      <span class="ws-label">Positive activity packets</span>
       <div class="pbar-wrap" style="position:relative;">
         <div class="threshold-label">60% threshold</div>
         <div style="position:relative;height:6px;background:var(--border);">
@@ -546,7 +546,7 @@ const SCENARIOS = {
     tagClass: 'green',
     waveAmplitude: 0.7,
     waveNoise: 0.3,
-    positiveMotion: 78,
+    positiveActivity: 78,
     locType: 'Cement retail dealer',
     locDesc: 'Stacked cement bags, scaffolding, building material context detected',
     ocrText: 'ACC CEMENT · AUTHORISED DEALER',
@@ -565,7 +565,7 @@ const SCENARIOS = {
     tagClass: 'amber',
     waveAmplitude: 0.08,
     waveNoise: 0.05,
-    positiveMotion: 12,
+    positiveActivity: 12,
     locType: 'Roadside fuel station',
     locDesc: 'Petrol pump canopy, fuel dispenser structures, no cement context detected',
     ocrText: 'HP FUEL STATION · RASOOLPUR NH',
@@ -577,14 +577,14 @@ const SCENARIOS = {
     score: 8,
     verdictClass: 'alert',
     verdictLabel: '⛟ Routine halt — no unloading',
-    verdictDesc: 'Motion below threshold. Location classified as fuel/rest stop. Not counted as delivery event. Trip continues.'
+    verdictDesc: 'Activity below threshold. Location classified as fuel/rest stop. Not counted as delivery event. Trip continues.'
   },
   wrongloc: {
     tag: 'Wrong location — alert',
     tagClass: 'red',
     waveAmplitude: 0.65,
     waveNoise: 0.25,
-    positiveMotion: 71,
+    positiveActivity: 71,
     locType: 'Cement dealer — wrong territory',
     locDesc: 'Cement bags and dealer signage detected. Location does not match planned delivery territory.',
     ocrText: 'SARABJIT SINGH · IRON & TIMBER · RASOOLPUR, TARANTARAN',
@@ -701,12 +701,12 @@ function initBars() {
   }
 }
 
-function updateBars(motionPct, frameIdx) {
+function updateBars(activityPct, frameIdx) {
   const threshold = Math.floor(BARS * 0.6);
   bars.forEach((b, i) => {
     if(i <= frameIdx) {
-      const isMotion = Math.random() < (motionPct/100);
-      b.className = 'bar-col ' + (isMotion ? 'motion' : 'idle');
+      const isActivity = Math.random() < (activityPct/100);
+      b.className = 'bar-col ' + (isActivity ? 'activity' : 'idle');
       b.style.height = (20 + Math.random()*60) + 'px';
     }
   });
@@ -773,7 +773,7 @@ async function runSimulation() {
   }
 
   document.getElementById('waveLabel').textContent = scenario==='idle'
-    ? 'Flat waveform — low amplitude motion detected'
+    ? 'Flat waveform — low amplitude activity detected'
     : 'Active physical activity pattern — unloading signature detected';
   addLog('L2 — Waveform complete: ' + (scenario==='idle' ? 'low amplitude — consistent with idle halt' : 'high amplitude — physical activity pattern confirmed'), scenario==='idle' ? 'log-amber' : 'log-green');
 
@@ -782,8 +782,8 @@ async function runSimulation() {
   addLog('L2 — Rolling window analysis: 20-min window · 1-min candles...', 'log-blue');
 
   for(let i=0;i<BARS;i++) {
-    updateBars(s.positiveMotion, i);
-    const pct = Math.round((i/BARS)*s.positiveMotion*0.9 + (i/BARS)*10);
+    updateBars(s.positiveActivity, i);
+    const pct = Math.round((i/BARS)*s.positiveActivity*0.9 + (i/BARS)*10);
     document.getElementById('pbarFill').style.width = pct + '%';
     document.getElementById('pbarFill').className = 'pbar-fill' + (pct>=60?' green':'');
     document.getElementById('pbarPct').textContent = pct + '%';
@@ -791,7 +791,7 @@ async function runSimulation() {
     await sleep(80);
   }
 
-  const finalPct = s.positiveMotion;
+  const finalPct = s.positiveActivity;
   document.getElementById('pbarFill').style.width = finalPct + '%';
   document.getElementById('pbarFill').className = 'pbar-fill' + (finalPct>=60?' green':'');
   document.getElementById('pbarPct').textContent = finalPct + '%';
@@ -800,11 +800,11 @@ async function runSimulation() {
   if(finalPct >= 60) {
     classEl.textContent = 'ACTIVE UNLOADING DETECTED';
     classEl.style.color = 'var(--green)';
-    addLog('L2 — ' + finalPct + '% positive motion · threshold 60% · ACTIVE UNLOADING confirmed', 'log-green');
+    addLog('L2 — ' + finalPct + '% positive activity · threshold 60% · ACTIVE UNLOADING confirmed', 'log-green');
   } else {
     classEl.textContent = 'IDLE / NO UNLOADING';
     classEl.style.color = 'var(--amber)';
-    addLog('L2 — ' + finalPct + '% positive motion · below 60% threshold · IDLE HALT classified', 'log-amber');
+    addLog('L2 — ' + finalPct + '% positive activity · below 60% threshold · IDLE HALT classified', 'log-amber');
   }
   setLayer('l2','done');
 
