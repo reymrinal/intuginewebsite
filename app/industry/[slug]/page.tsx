@@ -31,16 +31,22 @@ const INDUSTRY_MAP: Record<string, { label: string; icon: string; color: string;
     description: "End-to-end PTL and courier visibility for Indian enterprises — unified multi-carrier tracking, exception management, e-POD verification, and freight reconciliation via IntuParcel.",
   },
   "metal-mining-coal": {
-    label: "Metal, Mining & Coal",
+    label: "Metal/Mining & Coal",
     icon: "⛏️",
     color: "#78716c",
-    description: "Mine-to-plant logistics visibility for coal, metal, and mining operations — real-time GPS tracking, activity sensing using sensors for pilferage detection, risk profiling, and 24x7 control tower.",
+    description: "Logistics visibility for metals, mining, and coal supply chains — GPS tracking, activity sensing using sensors, and cargo security intelligence for bulk freight operations.",
   },
   "transporter": {
     label: "Transporter",
     icon: "🚛",
-    color: "#10b981",
-    description: "Free digital tools for transporters and small fleet owners — freight marketplace access, vehicle verification, and carbon emissions compliance under the ULIP PM GatiShakti initiative.",
+    color: "#f97316",
+    description: "Digital tools for Indian transporters and fleet owners — LeMP freight marketplace, TYT vehicle verification, and EcoTrace carbon emissions tracking powered by ULIP.",
+  },
+  "visibility-tracking": {
+    label: "Visibility & Tracking",
+    icon: "📡",
+    color: "#1a3c8f",
+    description: "India's multimodal supply chain visibility platform — FASTag toll intelligence, SIM-based tracking, GPS, and IoT activity sensing in one unified logistics intelligence stack.",
   },
 };
 
@@ -50,8 +56,9 @@ const LABEL_TO_SLUG: Record<string, string> = {
   "Freight Marketplace": "freight-marketplace",
   "API Suite": "api-suite",
   "PTL/Courier Tracking": "ptl-courier-tracking",
-  "Metal, Mining & Coal": "metal-mining-coal",
+  "Metal/Mining & Coal": "metal-mining-coal",
   "Transporter": "transporter",
+  "Visibility & Tracking": "visibility-tracking",
 };
 
 export const dynamicParams = false;
