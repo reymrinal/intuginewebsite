@@ -31,7 +31,7 @@ const INDUSTRY_MAP: Record<string, { label: string; icon: string; color: string;
     description: "End-to-end PTL and courier visibility for Indian enterprises — unified multi-carrier tracking, exception management, e-POD verification, and freight reconciliation via IntuParcel.",
   },
   "metal-mining-coal": {
-    label: "Metal/Mining & Coal",
+    label: "Metal, Mining & Coal",
     icon: "⛏️",
     color: "#78716c",
     description: "Logistics visibility for metals, mining, and coal supply chains — GPS tracking, activity sensing using sensors, and cargo security intelligence for bulk freight operations.",
@@ -56,7 +56,7 @@ const LABEL_TO_SLUG: Record<string, string> = {
   "Freight Marketplace": "freight-marketplace",
   "API Suite": "api-suite",
   "PTL/Courier Tracking": "ptl-courier-tracking",
-  "Metal/Mining & Coal": "metal-mining-coal",
+  "Metal, Mining & Coal": "metal-mining-coal",
   "Transporter": "transporter",
   "Visibility & Tracking": "visibility-tracking",
 };

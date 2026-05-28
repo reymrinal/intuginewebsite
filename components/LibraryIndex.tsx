@@ -3,14 +3,14 @@ import { useState } from "react";
 import PageCard from "@/components/PageCard";
 import type { SEOPage } from "@/lib/api";
 
-const ACTIVE_INDUSTRIES = ["Cement", "Freight Marketplace", "API Suite", "PTL/Courier Tracking", "Metal/Mining & Coal", "Transporter", "Visibility & Tracking"];
+const ACTIVE_INDUSTRIES = ["Cement", "Freight Marketplace", "API Suite", "PTL/Courier Tracking", "Metal, Mining & Coal", "Transporter", "Visibility & Tracking"];
 
 const INDUSTRY_COLORS: Record<string, string> = {
   "Cement": "#f59e0b",
   "Freight Marketplace": "#10b981",
   "API Suite": "#6366f1",
   "PTL/Courier Tracking": "#0ea5e9",
-  "Metal/Mining & Coal": "#78716c",
+  "Metal, Mining & Coal": "#78716c",
   "Transporter": "#f97316",
   "Visibility & Tracking": "#1a3c8f",
   Default: "#1a3c8f",
@@ -21,7 +21,7 @@ const INDUSTRY_ICONS: Record<string, string> = {
   "Freight Marketplace": "🚚",
   "API Suite": "⚡",
   "PTL/Courier Tracking": "📦",
-  "Metal/Mining & Coal": "⛏️",
+  "Metal, Mining & Coal": "⛏️",
   "Transporter": "🚛",
   "Visibility & Tracking": "📡",
   Default: "📄",
@@ -32,7 +32,7 @@ const INDUSTRY_SLUGS: Record<string, string> = {
   "Freight Marketplace": "freight-marketplace",
   "API Suite": "api-suite",
   "PTL/Courier Tracking": "ptl-courier-tracking",
-  "Metal/Mining & Coal": "metal-mining-coal",
+  "Metal, Mining & Coal": "metal-mining-coal",
   "Transporter": "transporter",
   "Visibility & Tracking": "visibility-tracking",
 };
