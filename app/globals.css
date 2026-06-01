@@ -134,3 +134,56 @@ body {
 #hs-form-container .hs-form .hs-form-field {
   margin-bottom: 0.75rem !important;
 }
+
+/* ── Prose Table Styles ─────────────────────────────────────────── */
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 2rem 0;
+  font-size: 0.875rem;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.prose table thead {
+  background: linear-gradient(135deg, #1a3c8f, #0f2460);
+}
+.prose table thead th {
+  color: #fff;
+  font-weight: 700;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  border: none;
+}
+.prose table tbody tr {
+  border-bottom: 1px solid #e5e7eb;
+  transition: background 0.15s;
+}
+.prose table tbody tr:last-child {
+  border-bottom: none;
+}
+.prose table tbody tr:nth-child(even) {
+  background: #f8fafc;
+}
+.prose table tbody tr:hover {
+  background: #f0f4ff;
+}
+.prose table tbody td {
+  padding: 0.7rem 1rem;
+  color: #374151;
+  vertical-align: top;
+  border: none;
+  line-height: 1.5;
+}
+.prose table tbody td:first-child {
+  font-weight: 600;
+  color: #0f2460;
+  white-space: nowrap;
+}
