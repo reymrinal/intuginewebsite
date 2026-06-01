@@ -49,3 +49,4 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return entries;
 }
+// rebuild: 2026-06-01T05:54:55Z — added truck-tracking-india + fleet-mgmt-south-africa pages
