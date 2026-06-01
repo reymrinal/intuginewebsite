@@ -55,3 +55,4 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 // rebuild: 2026-06-01T08:49:24Z — steel logistics software comparison page (Fretron counter)
 // rebuild: 2026-06-01T09:18:06Z — all 3 counter-moves: steel comparison + inbound tracking + activity sensing + pilferage prevention (280 total)
 // rebuild: 2026-06-01T09:19:28Z — steel SEO cluster: move1+2+3 complete (280 total)
+// rebuild: 2026-06-01T10:15:20Z — Express Logistics vertical launch: 8 personas, 27 keywords, 5 pages, industry filter added
