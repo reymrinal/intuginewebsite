@@ -46,39 +46,47 @@ export async function getAllPages(): Promise<SEOPage[]> {
 // ── Full page by slug: fetches only the one page needed ──────────────────────
 // Used by generateMetadata and the page renderer.
 // Each call fetches ~10-30KB max — no caching issues.
-// ── Build-time page cache ─────────────────────────────────────────────────
-// Fetches ALL 308 pages in ONE request at build start, then serves from memory.
-// Eliminates 308 individual backend calls → no more 429/500 during static gen.
-let _buildCache: Map<string, SEOPage> | null = null;
-
-async function getBuildCache(): Promise<Map<string, SEOPage>> {
-  if (_buildCache) return _buildCache;
-  console.log("[getBuildCache] Fetching all pages in one request...");
-  try {
-    const res = await fetch(BACKEND_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "get_all_full_pages" }),
-      cache: "no-store",
-    });
-    if (!res.ok) throw new Error(`Backend returned ${res.status}`);
-    const data = await res.json();
-    const pages: SEOPage[] = data.pages || [];
-    _buildCache = new Map(pages.map((p: SEOPage) => [p.slug, p]));
-    console.log(`[getBuildCache] Cached ${_buildCache.size} pages`);
-    return _buildCache;
-  } catch (e) {
-    console.error("[getBuildCache] Failed:", e);
-    _buildCache = new Map();
-    return _buildCache;
-  }
+async function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// ── getPageBySlug with retry + jitter ────────────────────────────────────────
+// Next.js uses 1 worker so requests are mostly sequential.
+// Retry with backoff handles transient 429/500 from the backend.
 export async function getPageBySlug(slug: string): Promise<SEOPage | null> {
-  const cache = await getBuildCache();
-  const page = cache.get(slug) || null;
-  if (!page) console.warn(`[getPageBySlug] slug not found in cache: ${slug}`);
-  return page;
+  const MAX_RETRIES = 6;
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      if (attempt > 0) {
+        // Exponential backoff: 1s, 2s, 4s, 8s, 16s + random jitter
+        const delay = Math.pow(2, attempt) * 1000 + Math.random() * 500;
+        console.log(`[getPageBySlug] Retry ${attempt}/${MAX_RETRIES - 1} for ${slug} after ${Math.round(delay)}ms`);
+        await sleep(delay);
+      }
+      const res = await fetch(BACKEND_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "get_page", slug }),
+        next: { revalidate: 60 },
+      });
+      if (res.status === 429 || res.status === 500 || res.status === 503) {
+        console.warn(`[getPageBySlug] Got ${res.status} for ${slug}, retrying...`);
+        continue;
+      }
+      if (!res.ok) {
+        console.error(`[getPageBySlug] Got ${res.status} for ${slug}, giving up`);
+        return null;
+      }
+      const data = await res.json();
+      return data.page || null;
+    } catch (e) {
+      if (attempt === MAX_RETRIES - 1) {
+        console.error(`[getPageBySlug] All retries exhausted for ${slug}:`, e);
+        return null;
+      }
+    }
+  }
+  return null;
 }
 
 function renderMarkdownTable(tableBlock: string): string {
