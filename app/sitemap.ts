@@ -53,3 +53,4 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 // rebuild: 2026-06-01T08:36:36Z — control tower pages: metal, iron ore, mining ops
 // rebuild: 2026-06-01T08:42:28Z — control tower cluster: steel, aluminium, sponge iron, scrap, TOFU explainer
 // rebuild: 2026-06-01T08:49:24Z — steel logistics software comparison page (Fretron counter)
+// rebuild: 2026-06-01T09:18:06Z — all 3 counter-moves: steel comparison + inbound tracking + activity sensing + pilferage prevention (280 total)
