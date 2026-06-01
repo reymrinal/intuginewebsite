@@ -58,3 +58,4 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 // rebuild: 2026-06-01T10:15:20Z — Express Logistics vertical launch: 8 personas, 27 keywords, 5 pages, industry filter added
 // force-rebuild: 2026-06-01T10:25:00Z
 // rebuild: 2026-06-01T10:44:55Z — trigger fresh build for 10 new Express Logistics pages
+// rebuild: 2026-06-01T10:53:24Z — 10 more Express Logistics pages (20 total)
