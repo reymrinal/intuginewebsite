@@ -43,12 +43,10 @@ const INDUSTRY_MAP: Record<string, { label: string; icon: string; color: string;
     description: "Digital tools for Indian transporters and fleet owners — LeMP freight marketplace, TYT vehicle verification, and EcoTrace carbon emissions tracking powered by ULIP.",
   },
   "express-logistics": {
-    title: "Express Logistics Tracking & Visibility Platform | Intugine",
-    industry: "Express Logistics",
-    heading: "AI-Powered Visibility and Control Tower for Express Logistics",
-    description: "Track every express vehicle across GPS, SIM, FASTag, and vehicle-number-only tracking. Intugine helps express logistics companies improve linehaul speed, SLA adherence, ETA accuracy, and control tower automation across national, zonal, and local movements.",
+    label: "Express Logistics",
+    icon: "⚡",
     color: "#dc2626",
-    emoji: "⚡",
+    description: "AI-powered visibility and control tower for high-speed express logistics networks — linehaul tracking, AI exception resolution, SLA adherence, and hub management across national, zonal, and local movements.",
   },
   "visibility-tracking": {
     label: "Visibility & Tracking",
