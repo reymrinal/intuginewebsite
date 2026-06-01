@@ -46,42 +46,39 @@ export async function getAllPages(): Promise<SEOPage[]> {
 // ── Full page by slug: fetches only the one page needed ──────────────────────
 // Used by generateMetadata and the page renderer.
 // Each call fetches ~10-30KB max — no caching issues.
-async function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+// ── Build-time page cache ─────────────────────────────────────────────────
+// Fetches ALL 308 pages in ONE request at build start, then serves from memory.
+// Eliminates 308 individual backend calls → no more 429/500 during static gen.
+let _buildCache: Map<string, SEOPage> | null = null;
+
+async function getBuildCache(): Promise<Map<string, SEOPage>> {
+  if (_buildCache) return _buildCache;
+  console.log("[getBuildCache] Fetching all pages in one request...");
+  try {
+    const res = await fetch(BACKEND_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "get_all_full_pages" }),
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error(`Backend returned ${res.status}`);
+    const data = await res.json();
+    const pages: SEOPage[] = data.pages || [];
+    _buildCache = new Map(pages.map((p: SEOPage) => [p.slug, p]));
+    console.log(`[getBuildCache] Cached ${_buildCache.size} pages`);
+    return _buildCache;
+  } catch (e) {
+    console.error("[getBuildCache] Failed:", e);
+    _buildCache = new Map();
+    return _buildCache;
+  }
 }
 
 export async function getPageBySlug(slug: string): Promise<SEOPage | null> {
-  const MAX_RETRIES = 5;
-  const BASE_DELAY = 500; // ms
-  
-  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    try {
-      if (attempt > 0) {
-        const delay = BASE_DELAY * Math.pow(2, attempt - 1); // 500, 1000, 2000, 4000ms
-        console.log(`[getPageBySlug] Retry ${attempt}/${MAX_RETRIES - 1} for slug=${slug} after ${delay}ms`);
-        await sleep(delay);
-      }
-      const res = await fetch(BACKEND_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "get_page", slug }),
-        next: { revalidate: 60 },
-      });
-      if (res.status === 429 || res.status === 500) {
-        console.warn(`[getPageBySlug] Got ${res.status} for slug=${slug}, will retry...`);
-        continue; // retry
-      }
-      if (!res.ok) throw new Error(`Backend returned ${res.status}`);
-      const data = await res.json();
-      return data.page || null;
-    } catch (e) {
-      if (attempt === MAX_RETRIES - 1) {
-        console.error(`[getPageBySlug] Failed after ${MAX_RETRIES} attempts for slug=${slug}:`, e);
-        return null;
-      }
-    }
-  }
-  return null;
+  const cache = await getBuildCache();
+  const page = cache.get(slug) || null;
+  if (!page) console.warn(`[getPageBySlug] slug not found in cache: ${slug}`);
+  return page;
 }
 
 function renderMarkdownTable(tableBlock: string): string {
