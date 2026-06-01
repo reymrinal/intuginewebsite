@@ -131,6 +131,40 @@ export function buildSchemaMarkup(page: SEOPage, baseUrl: string): object[] {
     },
   });
 
+  // NewsArticle schema — required for Google News eligibility
+  schemas.push({
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    "headline": (page.meta_title || page.title).substring(0, 110),
+    "description": page.meta_description || "",
+    "url": url,
+    "datePublished": new Date().toISOString(),
+    "dateModified": new Date().toISOString(),
+    "author": {
+      "@type": "Organization",
+      "name": "Intugine Technologies",
+      "url": "https://www.intugine.com",
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Intugine Technologies",
+      "url": "https://www.intugine.com",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://library.intugine.com/intugine-logo.png",
+        "width": 200,
+        "height": 60,
+      },
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": url,
+    },
+    "articleSection": page.industry || "Logistics",
+    "keywords": [page.target_keyword, ...(page.secondary_keywords?.split(",").map((k: string) => k.trim()) || [])].filter(Boolean).join(", "),
+    "inLanguage": "en-IN",
+  });
+
   if (schemaTypes.includes("FAQPage") && page.faq_block) {
     const questions = page.faq_block.split("|").map((q: string) => q.replace(/^Q:\s*/, "").trim()).filter(Boolean);
     if (questions.length) {
