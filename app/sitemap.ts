@@ -51,3 +51,4 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 }
 // rebuild: 2026-06-01T05:54:55Z — added truck-tracking-india + fleet-mgmt-south-africa pages
 // rebuild: 2026-06-01T08:36:36Z — control tower pages: metal, iron ore, mining ops
+// rebuild: 2026-06-01T08:42:28Z — control tower cluster: steel, aluminium, sponge iron, scrap, TOFU explainer
