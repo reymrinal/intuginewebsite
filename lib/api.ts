@@ -46,21 +46,42 @@ export async function getAllPages(): Promise<SEOPage[]> {
 // ── Full page by slug: fetches only the one page needed ──────────────────────
 // Used by generateMetadata and the page renderer.
 // Each call fetches ~10-30KB max — no caching issues.
+async function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export async function getPageBySlug(slug: string): Promise<SEOPage | null> {
-  try {
-    const res = await fetch(BACKEND_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "get_page", slug }),
-      next: { revalidate: 60 },
-    });
-    if (!res.ok) throw new Error(`Backend returned ${res.status}`);
-    const data = await res.json();
-    return data.page || null;
-  } catch (e) {
-    console.error(`[getPageBySlug] Failed for slug=${slug}:`, e);
-    return null;
+  const MAX_RETRIES = 5;
+  const BASE_DELAY = 500; // ms
+  
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      if (attempt > 0) {
+        const delay = BASE_DELAY * Math.pow(2, attempt - 1); // 500, 1000, 2000, 4000ms
+        console.log(`[getPageBySlug] Retry ${attempt}/${MAX_RETRIES - 1} for slug=${slug} after ${delay}ms`);
+        await sleep(delay);
+      }
+      const res = await fetch(BACKEND_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "get_page", slug }),
+        next: { revalidate: 60 },
+      });
+      if (res.status === 429 || res.status === 500) {
+        console.warn(`[getPageBySlug] Got ${res.status} for slug=${slug}, will retry...`);
+        continue; // retry
+      }
+      if (!res.ok) throw new Error(`Backend returned ${res.status}`);
+      const data = await res.json();
+      return data.page || null;
+    } catch (e) {
+      if (attempt === MAX_RETRIES - 1) {
+        console.error(`[getPageBySlug] Failed after ${MAX_RETRIES} attempts for slug=${slug}:`, e);
+        return null;
+      }
+    }
   }
+  return null;
 }
 
 function renderMarkdownTable(tableBlock: string): string {
