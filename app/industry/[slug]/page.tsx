@@ -54,6 +54,12 @@ const INDUSTRY_MAP: Record<string, { label: string; icon: string; color: string;
     color: "#1a3c8f",
     description: "India's multimodal supply chain visibility platform — FASTag toll intelligence, SIM-based tracking, GPS, and IoT activity sensing in one unified logistics intelligence stack.",
   },
+  "cruise-ai-control-tower": {
+    label: "Cruise AI Control Tower",
+    icon: "🤖",
+    color: "#7c3aed",
+    description: "Intugine Cruise — AI Control Tower for Indian freight operations. Autonomous exception detection, AI-powered driver communication via Vedika and Ved, and 3–4 hour advance SLA breach prediction across 50+ exception types.",
+  },
 };
 
 // Map industry label in DB to slug
@@ -66,6 +72,7 @@ const LABEL_TO_SLUG: Record<string, string> = {
   "Transporter": "transporter",
   "Visibility & Tracking": "visibility-tracking",
   "Express Logistics": "express-logistics",
+  "Cruise AI Control Tower": "cruise-ai-control-tower",
 };
 
 export const dynamicParams = false;
@@ -194,3 +201,4 @@ export default async function IndustryPage({ params }: { params: Promise<{ slug:
     </>
   );
 }
+
