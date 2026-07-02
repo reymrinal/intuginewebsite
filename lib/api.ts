@@ -25,22 +25,43 @@ const LIVE_STATUSES = ["reviewed", "published"];
 // ── Slim list: only metadata fields, no full_content/faq_block ──────────────
 // Used by generateStaticParams and the library index page.
 // Response is small (~50-100KB) — safely cacheable.
+// ── getAllPages with retry + jitter ──────────────────────────────────────────
+// Feeds generateStaticParams for [slug] and industry/[slug] — if this returns
+// an empty array, ALL library routes fail to pre-build (dynamicParams: false
+// means they'd 404 in production). Mirrors the getPageBySlug retry pattern
+// below so a transient 429/500 from the backend during a high-concurrency
+// Vercel build doesn't take down the entire site.
 export async function getAllPages(): Promise<SEOPage[]> {
-  try {
-    const res = await fetch(BACKEND_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "get_slugs" }),
-      next: { revalidate: 60 },
-    });
-    if (!res.ok) throw new Error(`Backend returned ${res.status}`);
-    const data = await res.json();
-    const pages: SEOPage[] = data.pages || [];
-    return pages.filter(p => p.slug && p.slug.trim() !== "" && LIVE_STATUSES.includes(p.status || ""));
-  } catch (e) {
-    console.error("[getAllPages] Failed:", e);
-    return [];
+  const MAX_RETRIES = 6;
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      if (attempt > 0) {
+        const delay = Math.pow(2, attempt) * 1000 + Math.random() * 500;
+        console.log(`[getAllPages] Retry ${attempt}/${MAX_RETRIES - 1} after ${Math.round(delay)}ms`);
+        await sleep(delay);
+      }
+      const res = await fetch(BACKEND_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "get_slugs" }),
+        next: { revalidate: 60 },
+      });
+      if (res.status === 429 || res.status === 500 || res.status === 503) {
+        console.warn(`[getAllPages] Got ${res.status}, retrying...`);
+        continue;
+      }
+      if (!res.ok) throw new Error(`Backend returned ${res.status}`);
+      const data = await res.json();
+      const pages: SEOPage[] = data.pages || [];
+      return pages.filter(p => p.slug && p.slug.trim() !== "" && LIVE_STATUSES.includes(p.status || ""));
+    } catch (e) {
+      if (attempt === MAX_RETRIES - 1) {
+        console.error("[getAllPages] All retries exhausted:", e);
+        return [];
+      }
+    }
   }
+  return [];
 }
 
 // ── Full page by slug: fetches only the one page needed ──────────────────────
