@@ -6,6 +6,7 @@ import CTABanner from "@/components/CTABanner";
 import FAQBlock from "@/components/FAQBlock";
 import ReportCard from "@/components/ReportCard";
 import { getAllReports, getReportBySlug } from "@/lib/api";
+import { isStandaloneHtmlDoc, parseStandaloneDoc } from "@/lib/reportDoc";
 
 const BASE_URL = "https://library.intugine.com";
 
@@ -109,12 +110,60 @@ export default async function ReportDetail({ params }: { params: Promise<{ slug:
     });
   }
 
+  const schemaScripts = schemas.map((schema, i) => (
+    <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
+  ));
+
+  // ── Standalone full-HTML-document reports (e.g. the "India Freight Data"  ─
+  // editorial series) come with their own complete design (masthead, fonts,
+  // charts). Render them in an isolated, CSS-scoped wrapper so their bare
+  // body/h1/section/table selectors can't leak onto the rest of the site.
+  if (isStandaloneHtmlDoc(report.html_content)) {
+    const scopeClass = `report-doc-${report.slug}`;
+    const { css, script, bodyInner } = parseStandaloneDoc(report.html_content || "", scopeClass);
+
+    return (
+      <div className="min-h-screen bg-white">
+        {schemaScripts}
+        <style dangerouslySetInnerHTML={{ __html: css }} />
+
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+          rel="stylesheet"
+        />
+
+        <div className="bg-[#f8fafc] border-b border-[#e5e7eb] px-6 py-2">
+          <div className="max-w-[1080px] mx-auto text-[0.78rem] text-[#6b7280] flex gap-1.5 items-center">
+            <a href="/" className="hover:text-[#1a3c8f]">Library</a>
+            <span>›</span>
+            <a href="/reports" className="hover:text-[#1a3c8f]">Reports</a>
+          </div>
+        </div>
+
+        <div className={scopeClass} dangerouslySetInnerHTML={{ __html: bodyInner }} />
+        {script && <script dangerouslySetInnerHTML={{ __html: script }} />}
+
+        {related.length > 0 && (
+          <div className="max-w-[1080px] mx-auto px-6 py-14 border-t border-[#e5e7eb]">
+            <h2 className="text-lg font-bold text-[#0f2460] mb-4">More Reports</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {related.map(r => <ReportCard key={r.id} report={r} />)}
+            </div>
+          </div>
+        )}
+
+        <Footer />
+      </div>
+    );
+  }
+
+  // ── Standard content-fragment reports — rendered inside the shared library ─
+  // chrome (Nav, prose typography, CTABanner, FAQBlock).
   return (
     <div className="min-h-screen bg-white">
       <Nav />
-      {schemas.map((schema, i) => (
-        <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
-      ))}
+      {schemaScripts}
 
       <div className="bg-[#f8fafc] border-b border-[#e5e7eb] px-6 py-2.5">
         <div className="max-w-3xl mx-auto text-[0.8rem] text-[#6b7280] flex gap-1.5 items-center">
