@@ -317,3 +317,102 @@ export function getReadingTime(content: string): number {
   const words = content?.split(/\s+/).length || 0;
   return Math.max(1, Math.ceil(words / 200));
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// REPORTS SECTION — /reports hub + /reports/[slug] detail pages
+// New backend function (reportsData.ts), separate from getDashboardData/SEOPage.
+// Same retry+backoff+no-store pattern as getAllPages/getPageBySlug to avoid
+// the class of build-time 429/500 outage documented for the main library.
+// ═══════════════════════════════════════════════════════════════════════════
+
+const REPORTS_BACKEND_URL = "https://rey-6011d59d.base44.app/functions/reportsData";
+
+export interface ReportMeta {
+  id: string;
+  title: string;
+  slug: string;
+  category?: string;
+  summary?: string;
+  hero_image_url?: string;
+  meta_title?: string;
+  meta_description?: string;
+  published_date?: string;
+  is_featured?: boolean;
+  status?: string;
+  tags?: string[];
+  read_time_minutes?: number;
+  author_name?: string;
+}
+
+export interface Report extends ReportMeta {
+  html_content?: string;
+  og_image_url?: string;
+  schema_type?: string;
+  faq_block?: string;
+  cta_text?: string;
+  cta_link?: string;
+  impressions?: number;
+  clicks?: number;
+}
+
+// ── Slim list — feeds generateStaticParams for /reports/[slug] and the /reports hub ──
+export async function getAllReports(): Promise<ReportMeta[]> {
+  const MAX_RETRIES = 6;
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      if (attempt > 0) {
+        const delay = Math.pow(2, attempt) * 1000 + Math.random() * 500;
+        console.log(`[getAllReports] Retry ${attempt}/${MAX_RETRIES - 1} after ${Math.round(delay)}ms`);
+        await sleep(delay);
+      }
+      const res = await fetch(REPORTS_BACKEND_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "get_report_slugs" }),
+        next: { revalidate: 60 },
+      });
+      if (res.status === 429 || res.status === 500 || res.status === 503) {
+        console.warn(`[getAllReports] Got ${res.status}, retrying...`);
+        continue;
+      }
+      if (!res.ok) throw new Error(`Backend returned ${res.status}`);
+      const data = await res.json();
+      return (data.reports || []) as ReportMeta[];
+    } catch (e) {
+      if (attempt === MAX_RETRIES - 1) {
+        console.error("[getAllReports] All retries exhausted:", e);
+        return [];
+      }
+    }
+  }
+  return [];
+}
+
+// ── Full report by slug ──────────────────────────────────────────────────────
+export async function getReportBySlug(slug: string): Promise<Report | null> {
+  const MAX_RETRIES = 6;
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      if (attempt > 0) {
+        const delay = Math.pow(2, attempt) * 1000 + Math.random() * 500;
+        await sleep(delay);
+      }
+      const res = await fetch(REPORTS_BACKEND_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "get_report", slug }),
+        next: { revalidate: 3600 },
+      });
+      if (res.status === 429 || res.status === 500 || res.status === 503) continue;
+      if (!res.ok) throw new Error(`Backend returned ${res.status}`);
+      const data = await res.json();
+      return (data.report as Report) || null;
+    } catch (e) {
+      if (attempt === MAX_RETRIES - 1) {
+        console.error(`[getReportBySlug] All retries exhausted for "${slug}":`, e);
+        return null;
+      }
+    }
+  }
+  return null;
+}
