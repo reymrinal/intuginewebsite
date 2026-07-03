@@ -35,9 +35,8 @@ export default function Nav() {
         {/* Desktop Nav */}
         <nav style={{ display: "flex", alignItems: "center", gap: "2rem" }}>
           <a href="https://library.intugine.com" style={{ color: "#1a3c8f", textDecoration: "none", fontSize: "0.9rem", fontWeight: 600 }}>Library</a>
+          <a href="https://library.intugine.com/reports" style={{ color: "#374151", textDecoration: "none", fontSize: "0.9rem", fontWeight: 500 }}>Reports</a>
           <a href="https://library.intugine.com/cruise" style={{ color: "#374151", textDecoration: "none", fontSize: "0.9rem", fontWeight: 500 }}>Cruise</a>
-          <a href="https://library.intugine.com/faq" style={{ color: "#374151", textDecoration: "none", fontSize: "0.9rem", fontWeight: 500 }}>FAQ</a>
-          <a href="https://library.intugine.com/case-studies" style={{ color: "#374151", textDecoration: "none", fontSize: "0.9rem", fontWeight: 500 }}>Case Studies</a>
           <a href="https://library.intugine.com/roi-calculator" style={{ color: "#374151", textDecoration: "none", fontSize: "0.9rem", fontWeight: 500 }}>ROI Calculator</a>
           <a href="https://library.intugine.com/ias-simulation" style={{ color: "#374151", textDecoration: "none", fontSize: "0.9rem", fontWeight: 500 }}>IAS</a>
           <a
