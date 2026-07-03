@@ -138,6 +138,8 @@ export default async function ReportDetail({ params }: { params: Promise<{ slug:
             <a href="/" className="hover:text-[#1a3c8f]">Library</a>
             <span>›</span>
             <a href="/reports" className="hover:text-[#1a3c8f]">Reports</a>
+            <span>›</span>
+            <span className="text-[#1a3c8f] font-medium truncate">{report.title}</span>
           </div>
         </div>
 
