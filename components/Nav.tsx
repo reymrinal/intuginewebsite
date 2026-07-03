@@ -101,28 +101,6 @@ export default function Nav() {
         </nav>
       )}
 
-      <style jsx>{`
-        .nav-desktop {
-          display: flex;
-        }
-        .nav-toggle {
-          display: none;
-        }
-        .nav-mobile-panel {
-          display: none;
-        }
-        @media (max-width: 860px) {
-          .nav-desktop {
-            display: none;
-          }
-          .nav-toggle {
-            display: flex;
-          }
-          .nav-mobile-panel {
-            display: flex;
-          }
-        }
-      `}</style>
     </header>
   );
 }

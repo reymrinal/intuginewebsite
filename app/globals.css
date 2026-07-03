@@ -187,3 +187,25 @@ body {
   color: #0f2460;
   white-space: nowrap;
 }
+
+/* Nav mobile responsiveness (added for mobile-friendly hamburger menu) */
+.nav-desktop {
+  display: flex;
+}
+.nav-toggle {
+  display: none;
+}
+.nav-mobile-panel {
+  display: none;
+}
+@media (max-width: 860px) {
+  .nav-desktop {
+    display: none;
+  }
+  .nav-toggle {
+    display: flex;
+  }
+  .nav-mobile-panel {
+    display: flex;
+  }
+}
