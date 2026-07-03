@@ -1,4 +1,5 @@
-import { getAllPages, getPageBySlug, markdownToHtml, buildSchemaMarkup, getTemplateLabel, getReadingTime } from "@/lib/api";
+import { markdownToHtml, buildSchemaMarkup, getTemplateLabel, getReadingTime } from "@/lib/api";
+import { getAllPages, getPageBySlug } from "@/lib/pagesCache";
 import { extractFAQSection } from "@/lib/faqUtils";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";

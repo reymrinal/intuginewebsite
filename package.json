@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/fetch-pages-cache.mjs && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "prebuild-cache": "node scripts/fetch-pages-cache.mjs"
   },
   "dependencies": {
     "next": "16.2.3",

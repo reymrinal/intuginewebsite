@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local build-time data cache (generated fresh on every build)
+/data/pages-cache.json

@@ -1,4 +1,4 @@
-import { getAllPages } from "@/lib/api";
+import { getAllPages } from "@/lib/pagesCache";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import PageCard from "@/components/PageCard";
