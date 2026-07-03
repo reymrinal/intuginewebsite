@@ -3,52 +3,557 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IAS Module — Coal Simulation</title>
+<title>Intugine IAS — Coal Inbound Activity Sensing Simulation</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: #03080F;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 500px;
-    padding: 3rem 1.5rem;
-    text-align: center;
+  :root {
+    --blue: #185FA5;
+    --blue-dark: #042C53;
+    --blue-mid: #2474C4;
+    --blue-light: #EAF3FB;
+    --blue-border: #B5D4F4;
+    --green: #0F9E6E;
+    --green-light: #EAF6F1;
+    --green-border: #7DD4B8;
+    --amber: #E59A1A;
+    --amber-light: #FEF6E4;
+    --amber-border: #F5CC7A;
+    --red: #D93025;
+    --red-light: #FDECEA;
+    --red-border: #F5A9A6;
+    --text: #0d1b2e;
+    --text2: #4A5568;
+    --text3: #8896a7;
+    --border: #E2E8F0;
+    --bg: #F7F9FC;
+    --white: #FFFFFF;
+    --radius: 8px;
   }
-  .wrap { max-width: 480px; }
-  .badge {
-    display: inline-block;
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: #3A8FF0;
-    background: rgba(27,111,212,0.1);
-    border: 1px solid rgba(27,111,212,0.2);
-    border-radius: 999px;
-    padding: 0.4rem 1rem;
-    margin-bottom: 1.25rem;
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,sans-serif;font-size:14px;line-height:1.5}
+
+  /* Nav */
+  .nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;height:52px;position:sticky;top:0;z-index:100}
+  .nav-logo{font-size:17px;font-weight:800;color:var(--blue-dark);letter-spacing:-0.5px}
+  .nav-logo b{color:var(--blue)}
+  .nav-links{display:flex;gap:24px;margin-left:28px}
+  .nav-link{font-size:13px;color:var(--text2);text-decoration:none;font-weight:500}
+  .nav-link:hover{color:var(--blue)}
+  .nav-cta{margin-left:auto;font-size:12px;font-weight:600;padding:7px 16px;border-radius:6px;background:var(--blue);color:white;text-decoration:none;border:none;cursor:pointer;transition:background .15s}
+  .nav-cta:hover{background:var(--blue-mid)}
+
+  .page{max-width:860px;margin:0 auto;padding:28px 20px 60px}
+
+  /* Page header */
+  .pg-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+  .ias-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:4px;background:var(--blue-light);color:var(--blue);border:1px solid var(--blue-border);text-transform:uppercase;letter-spacing:.04em;margin-bottom:7px}
+  .pg-title{font-size:20px;font-weight:700;color:var(--text);letter-spacing:-.3px;margin-bottom:3px}
+  .pg-desc{font-size:13px;color:var(--text2)}
+  .status-pill{font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;border:1px solid var(--border);color:var(--text3);background:var(--white);white-space:nowrap}
+  .status-pill.live{border-color:var(--green-border);color:var(--green);background:var(--green-light);animation:liveblink 1.5s infinite}
+  .status-pill.done{border-color:var(--blue-border);color:var(--blue);background:var(--blue-light)}
+  @keyframes liveblink{0%,100%{opacity:1}50%{opacity:.5}}
+
+  /* Scenario row */
+  .sc-row{display:flex;align-items:center;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+  .sc-label{font-size:12px;font-weight:500;color:var(--text3);margin-right:2px}
+  .sc-btn{font-size:12px;font-weight:500;padding:7px 13px;border-radius:6px;border:1px solid var(--border);background:var(--white);color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s}
+  .sc-btn:hover{border-color:var(--blue);color:var(--blue)}
+  .sc-btn.ag{border-color:var(--green);color:var(--green);background:var(--green-light)}
+  .sc-btn.aa{border-color:var(--amber);color:var(--amber);background:var(--amber-light)}
+  .sc-btn.ar{border-color:var(--red);color:var(--red);background:var(--red-light)}
+  .sc-dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+  .run-btn{margin-left:auto;font-size:13px;font-weight:600;padding:8px 20px;border-radius:6px;border:none;background:var(--blue);color:white;cursor:pointer;transition:background .15s;letter-spacing:-.1px}
+  .run-btn:hover{background:var(--blue-mid)}
+  .run-btn:disabled{background:var(--border);color:var(--text3);cursor:not-allowed}
+
+  /* Steps */
+  .steps{display:flex;gap:5px;margin-bottom:14px}
+  .step{flex:1;height:4px;border-radius:2px;background:var(--border);transition:background .4s}
+  .step.active{background:var(--blue)}
+  .step.done{background:var(--green)}
+
+  /* Layer badges */
+  .layers{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+  .lb{font-size:11px;font-weight:500;padding:3px 10px;border-radius:4px;border:1px solid var(--border);color:var(--text3);background:var(--white);transition:all .4s}
+  .lb.firing{border-color:var(--blue-border);color:var(--blue);background:var(--blue-light)}
+  .lb.done{border-color:var(--green-border);color:var(--green);background:var(--green-light)}
+
+  /* Card */
+  .card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:10px}
+  .card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .card-lbl{font-size:11px;font-weight:600;color:var(--text3);letter-spacing:.05em;text-transform:uppercase}
+  .card-tag{font-size:10px;font-weight:600;padding:2px 8px;border-radius:4px;background:var(--blue-light);color:var(--blue);border:1px solid var(--blue-border)}
+  .card-tag.g{background:var(--green-light);color:var(--green);border-color:var(--green-border)}
+
+  /* Wave */
+  #waveCanvas{width:100%;height:96px;display:block;background:var(--bg);border-radius:4px;border:1px solid var(--border)}
+  .wave-foot{display:flex;justify-content:space-between;margin-top:5px;font-size:11px;color:var(--text3)}
+  .wave-mid{color:var(--blue);font-weight:500}
+
+  /* Bars */
+  .bar-grid{display:flex;align-items:flex-end;gap:3px;height:68px;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:5px 5px 0;margin-bottom:8px}
+  .bcol{flex:1;min-width:5px;background:var(--border);border-radius:2px 2px 0 0;height:4px;transition:height .3s,background .3s}
+  .bcol.m{background:var(--green)}
+  .bcol.i{background:#CBD5E0}
+
+  /* Progress */
+  .prow{display:flex;align-items:center;gap:10px;padding:9px 13px;background:var(--bg);border:1px solid var(--border);border-radius:6px;margin-bottom:7px}
+  .prow-lbl{font-size:12px;color:var(--text2);min-width:150px}
+  .ptrack{flex:1;height:6px;background:var(--border);border-radius:3px;position:relative}
+  .pfill{height:6px;border-radius:3px;background:var(--blue);transition:width .3s,background .3s;width:0%}
+  .pfill.g{background:var(--green)}
+  .tline{position:absolute;top:-4px;left:60%;width:2px;height:14px;background:var(--amber);border-radius:1px}
+  .tlabel{position:absolute;top:-18px;left:60%;transform:translateX(-50%);font-size:9px;font-weight:600;color:var(--amber);white-space:nowrap}
+  .pval{font-size:13px;font-weight:600;color:var(--text);min-width:34px;text-align:right}
+  .pval.g{color:var(--green)}.pval.a{color:var(--amber)}.pval.r{color:var(--red)}
+
+  .crow{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:var(--bg);border:1px solid var(--border);border-radius:6px}
+  .crow-lbl{font-size:12px;color:var(--text2)}
+  .crow-val{font-size:13px;font-weight:600;color:var(--text3)}
+  .crow-val.g{color:var(--green)}.crow-val.a{color:var(--amber)}.crow-val.r{color:var(--red)}
+
+  /* Location */
+  .loc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .lcard{border:1px solid var(--border);border-radius:6px;padding:14px;background:var(--bg);position:relative;overflow:hidden}
+  .lcard-lbl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+  .lcard-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:3px}
+  .lcard-sub{font-size:12px;color:var(--text2);line-height:1.5}
+  .ocr{margin-top:8px;padding:8px 10px;background:var(--white);border:1px solid var(--border);border-radius:4px;font-size:12px;font-weight:500;color:var(--text2);min-height:30px;font-family:'SF Mono','Consolas',monospace}
+  .om{color:var(--green)}.ox{color:var(--red)}
+  .ocursor{display:inline-block;width:6px;height:11px;background:var(--blue);animation:blink .7s infinite;vertical-align:middle}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+  .scanl{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--blue-mid),transparent);top:0;animation:scananim 1.8s linear infinite;opacity:0;transition:opacity .3s}
+  .scanl.on{opacity:.5}
+  @keyframes scananim{0%{top:0%}100%{top:100%}}
+
+  /* Confidence */
+  .conf{display:flex;align-items:center;gap:22px}
+  .score-wrap{position:relative;width:86px;height:86px;flex-shrink:0}
+  .score-svg{width:86px;height:86px;transform:rotate(-90deg)}
+  .score-bg{fill:none;stroke:var(--border);stroke-width:7}
+  .score-arc{fill:none;stroke:var(--green);stroke-width:7;stroke-linecap:round;stroke-dasharray:234;stroke-dashoffset:234;transition:stroke-dashoffset 1.4s cubic-bezier(.4,0,.2,1),stroke .4s}
+  .score-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .score-n{font-size:22px;font-weight:700;color:var(--text);line-height:1}
+  .score-s{font-size:9px;font-weight:500;color:var(--text3);letter-spacing:.04em;margin-top:1px}
+
+  .vwrap{flex:1}
+  .vchip{display:inline-flex;align-items:center;gap:7px;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;border:1px solid var(--border);color:var(--text3);background:var(--white);margin-bottom:8px;opacity:0;transition:opacity .5s}
+  .vchip.show{opacity:1}
+  .vchip.vc{border-color:var(--green-border);color:var(--green);background:var(--green-light)}
+  .vchip.va{border-color:var(--red-border);color:var(--red);background:var(--red-light)}
+  .vchip.vr{border-color:var(--amber-border);color:var(--amber);background:var(--amber-light)}
+  .vdot{width:7px;height:7px;border-radius:50%;background:currentColor;animation:blink 1.2s infinite}
+  .vdesc{font-size:13px;color:var(--text2);line-height:1.6}
+
+  /* Log */
+  .logwrap{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:9px 12px;font-size:11px;font-family:'SF Mono','Consolas',monospace;line-height:1.9;color:var(--text2);max-height:104px;overflow-y:auto}
+  .ll{display:flex;gap:10px}
+  .lt{color:var(--text3);flex-shrink:0}
+  .lb2{color:var(--blue)}.lg{color:var(--green)}.la{color:var(--amber)}.lr{color:var(--red)}
+
+
+  /* Layer 5 — Cruise */
+  .cruise-empty{font-size:12px;color:var(--text3);padding:10px 12px;background:var(--bg);border:1px dashed var(--border);border-radius:6px;text-align:center}
+  .cruise-live{display:flex;flex-direction:column;gap:10px}
+  .ticket-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 13px;background:var(--red-light);border:1px solid var(--red-border);border-radius:6px}
+  .ticket-id-wrap{flex-shrink:0}
+  .ticket-lbl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em}
+  .ticket-id{font-size:15px;font-weight:700;color:var(--red);font-family:'SF Mono','Consolas',monospace;margin-top:2px}
+  .ticket-reason{font-size:12px;color:var(--text2);text-align:right;line-height:1.4}
+  .action-list{display:flex;flex-direction:column;gap:6px}
+  .action-item{display:flex;align-items:center;gap:10px;padding:9px 13px;background:var(--bg);border:1px solid var(--border);border-radius:6px;transition:all .3s}
+  .action-item.firing{border-color:var(--amber-border);background:var(--amber-light)}
+  .action-item.done{border-color:var(--green-border);background:var(--green-light)}
+  .action-ico{width:16px;height:16px;border-radius:50%;border:2px solid var(--text3);flex-shrink:0;position:relative;transition:all .3s}
+  .action-item.firing .action-ico{border-color:var(--amber);animation:liveblink 1s infinite}
+  .action-item.done .action-ico{border-color:var(--green);background:var(--green)}
+  .action-item.done .action-ico:after{content:'';position:absolute;left:4px;top:1px;width:4px;height:8px;border:solid white;border-width:0 2px 2px 0;transform:rotate(45deg)}
+  .action-txt{flex:1;font-size:12px;color:var(--text2);font-weight:500}
+  .action-stat{font-size:11px;font-weight:600;color:var(--text3)}
+  .action-item.firing .action-stat{color:var(--amber)}
+  .action-item.done .action-stat{color:var(--green)}
+  .cruise-clean{display:flex;align-items:center;gap:13px;padding:13px;background:var(--green-light);border:1px solid var(--green-border);border-radius:6px}
+  .cruise-clean-ico{width:30px;height:30px;border-radius:50%;background:var(--green);color:white;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0}
+  .cruise-clean-title{font-size:13px;font-weight:600;color:var(--green);margin-bottom:2px}
+  .cruise-clean-desc{font-size:12px;color:var(--text2);line-height:1.5}
+  .card.dim{opacity:.55}
+
+  @media(max-width:560px){
+    .loc-grid{grid-template-columns:1fr}
+    .sc-row{flex-direction:column;align-items:flex-start}
+    .run-btn{margin-left:0;width:100%}
+    .nav-links{display:none}
   }
-  h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: 0.75rem; }
-  p { color: rgba(255,255,255,0.5); font-size: 0.95rem; line-height: 1.5; }
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <span class="badge">Coming Soon</span>
-    <h1>Coal &amp; Pet Coke IAS Simulation</h1>
-    <p>The interactive coal-specific IAS walkthrough is being finalized. Check back shortly, or book a demo to see it live for your operation.</p>
+
+<div class="page">
+
+  <div class="pg-header">
+    <div>
+      <div class="ias-chip">
+        <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><circle cx="4.5" cy="4.5" r="3.5" stroke="currentColor" stroke-width="1.2"/><circle cx="4.5" cy="4.5" r="1.4" fill="currentColor"/></svg>
+        IAS Module
+      </div>
+      <div class="pg-title">Intugine Activity Sensing Engine — Live Simulation</div>
+      <div class="pg-desc">See how Intugine detects and resolves coal-inbound exceptions in real time — clean run, shrinkage, or quality tampering. Activity Sensing classifies the halt; Cruise raises the ticket and acts. Mine / washery → plant gate.</div>
+    </div>
+    <div id="sp" class="status-pill">Ready</div>
   </div>
-  <script>
-    function reportHeight() {
-      var h = document.body.scrollHeight;
-      window.parent.postMessage({ iasHeight: h }, "*");
-    }
-    window.addEventListener("load", reportHeight);
-    window.addEventListener("resize", reportHeight);
-    setTimeout(reportHeight, 100);
-  </script>
+
+  <div class="sc-row">
+    <span class="sc-label">Scenario:</span>
+    <button class="sc-btn ag" id="bu" onclick="sel('clean')"><span class="sc-dot"></span>Clean delivery at plant gate</button>
+    <button class="sc-btn" id="bi" onclick="sel('shrinkage')"><span class="sc-dot"></span>Shrinkage — unauthorised halt</button>
+    <button class="sc-btn" id="bw" onclick="sel('tamper')"><span class="sc-dot"></span>Quality-tampering alert</button>
+    <button class="run-btn" id="rb" onclick="run()">Run simulation →</button>
+  </div>
+
+  <div class="steps">
+    <div class="step active" id="s0"></div>
+    <div class="step" id="s1"></div>
+    <div class="step" id="s2"></div>
+    <div class="step" id="s3"></div>
+    <div class="step" id="s4"></div>
+  </div>
+
+  <div class="layers">
+    <div class="lb" id="l1">L1 — Unified coverage</div>
+    <div class="lb" id="l2">L2 — Activity sensing</div>
+    <div class="lb" id="l3">L3 — AI visual + gate verification</div>
+    <div class="lb" id="l4">L4 — Confidence engine</div>
+    <div class="lb" id="l5">L5 — Cruise auto-resolution</div>
+  </div>
+
+  <!-- Waveform -->
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-lbl">Layer 2 — Activity sensor waveform (halt signature)</div>
+      <div class="card-tag" id="wtag">Awaiting halt</div>
+    </div>
+    <canvas id="waveCanvas" height="96"></canvas>
+    <div class="wave-foot">
+      <span>t = 0 min</span>
+      <span class="wave-mid" id="ws">Waiting for halt trigger...</span>
+      <span>t = 20 min</span>
+    </div>
+  </div>
+
+  <!-- Rolling window -->
+  <div class="card">
+    <div class="card-hdr"><div class="card-lbl">Rolling window — halt activity · 1-min intervals</div></div>
+    <div class="bar-grid" id="bg"></div>
+    <div class="prow">
+      <span class="prow-lbl">Positive activity packets</span>
+      <div class="ptrack">
+        <div class="tlabel">60% threshold</div>
+        <div class="tline"></div>
+        <div class="pfill" id="pf"></div>
+      </div>
+      <span class="pval" id="pv">0%</span>
+    </div>
+    <div class="crow">
+      <span class="crow-lbl">Window classification</span>
+      <span class="crow-val" id="cv">Analysing...</span>
+    </div>
+  </div>
+
+  <!-- AI Visual -->
+  <div class="card">
+    <div class="card-hdr"><div class="card-lbl">Layer 3 — AI visual + spatial context (gate / route)</div></div>
+    <div class="loc-grid">
+      <div class="lcard">
+        <div class="scanl" id="sc1"></div>
+        <div class="lcard-lbl" id="scanLbl">360° imagery scan</div>
+        <div class="lcard-title" id="lt">—</div>
+        <div class="lcard-sub" id="ld">Awaiting classification...</div>
+        <div class="ocr"><span id="ot">—</span></div>
+      </div>
+      <div class="lcard">
+        <div class="scanl" id="sc2"></div>
+        <div class="lcard-lbl">Dispatch challan vs plant receipt</div>
+        <div class="lcard-title" id="st">—</div>
+        <div class="lcard-sub" id="sd">Cross-referencing dispatch data...</div>
+        <div class="ocr"><span id="sv">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confidence -->
+  <div class="card">
+    <div class="card-hdr"><div class="card-lbl">Layer 4 — Confidence engine output</div></div>
+    <div class="conf">
+      <div class="score-wrap">
+        <svg class="score-svg" viewBox="0 0 86 86">
+          <circle class="score-bg" cx="43" cy="43" r="37"/>
+          <circle class="score-arc" id="sa" cx="43" cy="43" r="37"/>
+        </svg>
+        <div class="score-inner">
+          <div class="score-n" id="sn">0</div>
+          <div class="score-s">/ 100</div>
+        </div>
+      </div>
+      <div class="vwrap">
+        <div class="vchip" id="vc"><div class="vdot"></div><span id="vl">—</span></div>
+        <div class="vdesc" id="vd">Select a scenario and run the simulation to see the output.</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Layer 5 — Cruise Control Tower auto-resolution -->
+  <div class="card" id="cruiseCard">
+    <div class="card-hdr">
+      <div class="card-lbl">Layer 5 — Cruise AI control tower · auto-resolution</div>
+      <div class="card-tag" id="t5tag">Standby</div>
+    </div>
+    <div id="t5body">
+      <div class="cruise-empty" id="cruiseEmpty">Awaiting Layer 4 verdict — Cruise acts only when an exception is confirmed.</div>
+      <div class="cruise-live" id="cruiseLive" style="display:none">
+        <div class="ticket-row">
+          <div class="ticket-id-wrap">
+            <div class="ticket-lbl">Exception ticket</div>
+            <div class="ticket-id" id="t5id">—</div>
+          </div>
+          <div class="ticket-reason" id="t5reason">—</div>
+        </div>
+        <div class="action-list">
+          <div class="action-item" id="t5a1"><span class="action-ico" id="t5a1i"></span><span class="action-txt" id="t5a1t">Auto-call to driver</span><span class="action-stat" id="t5a1s">queued</span></div>
+          <div class="action-item" id="t5a2"><span class="action-ico" id="t5a2i"></span><span class="action-txt" id="t5a2t">Plant manager alert</span><span class="action-stat" id="t5a2s">queued</span></div>
+          <div class="action-item" id="t5a3"><span class="action-ico" id="t5a3i"></span><span class="action-txt" id="t5a3t">Logistics team alert</span><span class="action-stat" id="t5a3s">queued</span></div>
+        </div>
+      </div>
+      <div class="cruise-clean" id="cruiseClean" style="display:none">
+        <div class="cruise-clean-ico">✓</div>
+        <div>
+          <div class="cruise-clean-title" id="t5cleanT">No exception — auto-reconciled</div>
+          <div class="cruise-clean-desc" id="t5cleanD">Clean delivery. Cruise raises no ticket.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Log -->
+  <div class="card">
+    <div class="card-hdr" style="margin-bottom:10px"><div class="card-lbl">System log</div></div>
+    <div class="logwrap" id="log">
+      <div class="ll"><span class="lt">00:00:00</span><span class="lb2">IAS coal-inbound module ready — select a scenario and run simulation</span></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const SC = {
+  clean:{bc:'ag',wa:.65,wn:.28,pm:80,noScan:true,lt:'Plant geofence — verified',ld:'Delivery verified by plant geofence entry, not roadside imagery. Vehicle inside plant boundary; gate weighbridge is the system of record for tonnage.',ot:'INSIDE PLANT GEOFENCE · GATE-2 · ARRIVAL CONFIRMED',oc:'om',st:'Challan vs weighbridge matched',sd:'Dispatch challan tonnage cross-referenced against gate weighbridge reading — within tolerance.',sv:'42.0 MT DISPATCHED · 41.8 MT RECEIVED · MATCH ✓',sc:'om',score:88,vc:'vc',vl:'✓ Clean delivery — tonnage verified',vd:'Clean inbound run. Arrival verified by plant geofence, weighbridge tonnage within tolerance of dispatch. No shrinkage, no unauthorised halt. Receipt auto-reconciled — no exception raised.',wb:'Active pattern',wbc:'g',ws:'Active tipping / unloading signature at plant gate',t5:'no_ticket',t5title:'No exception — auto-reconciled',t5desc:'Clean delivery. Cruise raises no ticket. Gate receipt auto-reconciled against dispatch challan. No calls or alerts required.'},
+  shrinkage:{bc:'aa',wa:.52,wn:.22,pm:64,lt:'Unauthorised roadside halt',ld:'Off-route halt detected on open ground — no weighbridge, no plant context. Vehicle stationary 47 min. Movement signature inconsistent with a fuel or rest break.',ot:'NO GATE CONTEXT · OPEN GROUND · OFF DESIGNATED LANE',oc:'ox',st:'Tonnage gap flagged',sd:'Halt occurred between washery and plant, off the designated lane, with activity indicative of partial offloading. High shrinkage risk.',sv:'DISPATCH 42.0 MT · PROJECTED SHORT-RECEIPT ✗',sc:'ox',score:24,vc:'va',vl:'⚠ Shrinkage risk — unauthorised halt',vd:'Activity-indicative halt on open ground, off the designated lane, before reaching the plant. Pattern consistent with en-route siphoning. Tonnage shortfall likely at the gate. Flagged in transit — control tower alerted before the truck arrives.',wb:'Active — off-route',wbc:'',ws:'Activity detected at an unauthorised off-route location',t5:'ticket',t5title:'Cruise ticket raised — shrinkage exception',t5desc:'Cruise opens an exception ticket, auto-calls the driver for halt justification in the regional language, and alerts the plant manager and logistics team — before the truck reaches the gate, while the load can still be checked.',t5ticket:'EXC-CL-4471',t5reason:'Unauthorised off-route halt · 47 min · projected short-receipt',t5call:'Auto-call placed to driver — regional language IVR',t5alert1:'Plant Manager — SMS + app alert',t5alert2:'Logistics control room — live ticket'},
+  tamper:{bc:'ar',wa:.58,wn:.24,pm:70,lt:'Extended halt — substitution hotspot',ld:'Prolonged halt (1h 12m) near a known grade-substitution hotspot. Load-disturbance signature detected. Vehicle then resumed toward plant gate.',ot:'KNOWN SUBSTITUTION ZONE · LOAD DISTURBANCE DETECTED',oc:'ox',st:'GCV / weight anomaly flagged',sd:'Extended halt with load-disturbance activity at a flagged hotspot. Consistent with high-GCV coal swap or moisture addition to inflate weight. Quality verification required at gate.',sv:'WEIGHT OK · GCV DOWNGRADE SUSPECTED ✗',sc:'ox',score:19,vc:'va',vl:'⚠ Quality tampering — verification required',vd:'Prolonged load-disturbance halt at a known substitution hotspot. Tonnage may reconcile at the weighbridge while calorific value does not — high-GCV coal swapped for low, or moisture added. Flag raised for mandatory GCV sampling at the gate before unloading is accepted.',wb:'Active — load disturbance',wbc:'',ws:'Load-disturbance signature at a flagged substitution hotspot',t5:'ticket',t5title:'Cruise ticket raised — quality-tampering exception',t5desc:'Cruise opens an exception ticket, auto-calls the driver, alerts the plant manager and logistics team, and flags mandatory GCV sampling at the gate before unloading is accepted.',t5ticket:'EXC-QL-4472',t5reason:'Load-disturbance halt · 1h12m · GCV downgrade suspected',t5call:'Auto-call placed to driver — regional language IVR',t5alert1:'Plant Manager — GCV sampling flag raised',t5alert2:'Logistics control room — live ticket'}
+};
+
+let scenario='clean', running=false, bars=[], BARS=20;
+
+function gt(){return new Date().toTimeString().slice(0,8)}
+function log(msg,cls){const l=document.getElementById('log');const d=document.createElement('div');d.className='ll';d.innerHTML=`<span class="lt">${gt()}</span><span class="${cls||'lb2'}">${msg}</span>`;l.appendChild(d);l.scrollTop=l.scrollHeight}
+function setStep(n){for(let i=0;i<5;i++){const s=document.getElementById('s'+i);s.className='step'+(i<n?' done':i===n?' active':'')}}
+function setL(id,st){document.getElementById(id).className='lb'+(st==='f'?' firing':st==='d'?' done':'')}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+
+function initBars(){const g=document.getElementById('bg');g.innerHTML='';bars=[];for(let i=0;i<BARS;i++){const b=document.createElement('div');b.className='bcol';b.style.height='4px';g.appendChild(b);bars.push(b)}}
+
+function drawWave(canvas,pts,sc){
+  const ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#F7F9FC';ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='#E2E8F0';ctx.lineWidth=1;
+  for(let y=H/4;y<H;y+=H/4){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+  ctx.strokeStyle='#CBD5E0';ctx.beginPath();ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.stroke();
+  if(pts.length<2)return;
+  const col=sc==='clean'?'#185FA5':'#E59A1A';
+  ctx.strokeStyle=col;ctx.lineWidth=1.8;ctx.shadowColor=col;ctx.shadowBlur=4;
+  ctx.beginPath();pts.forEach((p,i)=>{const x=(i/(pts.length-1))*W,y=H/2-p*(H/2.4);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.stroke();ctx.shadowBlur=0;
+  ctx.fillStyle='rgba(24,95,165,0.07)';ctx.beginPath();pts.forEach((p,i)=>{const x=(i/(pts.length-1))*W,y=H/2-p*(H/2.4);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.lineTo(W,H/2);ctx.lineTo(0,H/2);ctx.closePath();ctx.fill();
+}
+
+function genPts(sc,n){const s=SC[sc];const pts=[];for(let i=0;i<n;i++){let v=(Math.random()-.5)*2*s.wn;if(i<n*.12)v+=Math.sin(i/2.5)*s.wa*(1-i/(n*.12));v+=(Math.random()-.3)*s.wa*.35;pts.push(v)}return pts}
+
+async function run(){
+  if(running)return;running=true;
+  const s=SC[scenario];
+  const cv=document.getElementById('waveCanvas');cv.width=cv.offsetWidth;
+  document.getElementById('rb').disabled=true;
+  document.getElementById('sp').textContent='LIVE';document.getElementById('sp').className='status-pill live';
+  initBars();
+  document.getElementById('sa').style.strokeDashoffset=234;document.getElementById('sa').style.stroke='#0F9E6E';
+  document.getElementById('sn').textContent='0';
+  document.getElementById('vc').className='vchip';document.getElementById('vc').style.opacity='0';
+  document.getElementById('pf').style.width='0%';document.getElementById('pf').className='pfill';
+  document.getElementById('pv').textContent='0%';document.getElementById('pv').className='pval';
+  document.getElementById('cv').textContent='Analysing...';document.getElementById('cv').className='crow-val';
+  document.getElementById('lt').textContent='—';document.getElementById('ld').textContent='Awaiting classification...';
+  document.getElementById('ot').textContent='—';document.getElementById('st').textContent='—';
+  document.getElementById('sd').textContent='Cross-referencing dispatch data...';document.getElementById('sv').textContent='—';
+  document.getElementById('vd').textContent='Processing...';
+  document.getElementById('ws').textContent='Halt detected — building activity profile...';
+  const wtag=document.getElementById('wtag');wtag.textContent='Recording...';wtag.className='card-tag';
+  ['l1','l2','l3','l4','l5'].forEach(l=>setL(l,''));setStep(0);drawWave(cv,[],scenario);
+  // reset Cruise (L5) card
+  document.getElementById('cruiseEmpty').style.display='';
+  document.getElementById('cruiseLive').style.display='none';
+  document.getElementById('cruiseClean').style.display='none';
+  document.getElementById('cruiseCard').className='card';
+  document.getElementById('t5tag').textContent='Standby';document.getElementById('t5tag').className='card-tag';
+  ['t5a1','t5a2','t5a3'].forEach(id=>{document.getElementById(id).className='action-item'});
+  ['t5a1s','t5a2s','t5a3s'].forEach(id=>{document.getElementById(id).textContent='queued'});
+
+  log('Inbound coal truck — halt detected. GPS locked. Duration clock started. Lane: washery → plant gate.','lb2');
+  log('All 4 intelligence layers activating in parallel...','lb2');
+  await sleep(500);setL('l1','f');
+  log('L1 — Unified coverage: SIM + wired/portable GPS + FASTag + activity sensor data confirmed','lb2');
+  await sleep(600);setL('l1','d');
+
+  setStep(1);setL('l2','f');log('L2 — Activity sensor: recording physical activity pattern...','lb2');
+  const pts=genPts(scenario,80),drawn=[];
+  for(let i=0;i<80;i++){drawn.push(pts[i]);drawWave(cv,drawn,scenario);await sleep(28)}
+  document.getElementById('ws').textContent=s.ws;
+  wtag.textContent=s.wb;wtag.className='card-tag'+(s.wbc?' '+s.wbc:'');
+  log('L2 — Waveform complete: activity pattern recorded for classification',scenario==='clean'?'lg':'la');
+
+  setStep(2);log('L2 — Rolling window: analysing 20 activity packets...','lb2');
+  for(let i=0;i<BARS;i++){
+    bars[i].style.height=(20+Math.random()*52)+'px';
+    const m=Math.random()<(s.pm/100);bars[i].className='bcol '+(m?'m':'i');
+    const p=Math.round((i/BARS)*s.pm*.85+(i/BARS)*8);
+    document.getElementById('pf').style.width=p+'%';document.getElementById('pf').className='pfill'+(p>=60?' g':'');
+    document.getElementById('pv').textContent=p+'%';document.getElementById('pv').className='pval'+(p>=60?' g':p<20?' r':' a');
+    await sleep(85);
+  }
+  document.getElementById('pf').style.width=s.pm+'%';document.getElementById('pf').className='pfill'+(s.pm>=60?' g':'');
+  document.getElementById('pv').textContent=s.pm+'%';document.getElementById('pv').className='pval'+(s.pm>=60?' g':' a');
+  const cvEl=document.getElementById('cv');
+  if(s.pm>=60){cvEl.textContent='PHYSICAL ACTIVITY DETECTED';cvEl.className='crow-val g';log(`L2 — ${s.pm}% positive activity · threshold 60% · physical activity confirmed at halt`,'lg')}
+  else{cvEl.textContent='LOW ACTIVITY / IDLE';cvEl.className='crow-val a';log(`L2 — ${s.pm}% positive activity · below 60% threshold · idle halt`,'la')}
+  setL('l2','d');
+
+  setStep(3);setL('l3','f');
+  document.getElementById('scanLbl').textContent = s.noScan ? 'Plant geofence verification' : '360° imagery scan';
+  if(s.noScan){
+    // Clean delivery inside plant — no roadside 360 scan; verify by geofence
+    log('L3 — Inside plant geofence: roadside 360° scan not applicable. Verifying by geofence + gate weighbridge...','lb2');
+    document.getElementById('lt').textContent='—';
+    document.getElementById('ld').textContent='360° roadside imagery not used inside plant boundary. Delivery verified by plant geofence entry.';
+    document.getElementById('ot').innerHTML='<span class="om">'+s.ot+'</span>';
+    await sleep(700);
+    document.getElementById('st').textContent=s.st;document.getElementById('sd').textContent=s.sd;
+    document.getElementById('sv').innerHTML=`<span class="${s.sc}">${s.sv}</span>`;
+    setL('l3','d');log('L3 — Geofence + weighbridge verification complete','lg');
+  } else {
+    log('L3 — AI visual verification: scanning 360° imagery and nearby place APIs...','lb2');
+    document.getElementById('sc1').className='scanl on';document.getElementById('sc2').className='scanl on';
+    await sleep(700);
+    document.getElementById('lt').textContent=s.lt;document.getElementById('ld').textContent=s.ld;
+    log('L3 — Location type identified: '+s.lt,'lb2');await sleep(500);
+    document.getElementById('ot').innerHTML='<span class="ocursor"></span>';
+    for(let i=0;i<s.ot.length;i++){await sleep(22);document.getElementById('ot').innerHTML=`<span class="${s.oc}">${s.ot.slice(0,i+1)}</span><span class="ocursor"></span>`}
+    document.getElementById('ot').innerHTML=`<span class="${s.oc}">${s.ot}</span>`;
+    log('L3 — OCR complete: gate/location signage read · dispatch challan cross-referenced','lb2');await sleep(400);
+    document.getElementById('st').textContent=s.st;document.getElementById('sd').textContent=s.sd;
+    document.getElementById('sv').innerHTML=`<span class="${s.sc}">${s.sv}</span>`;
+    document.getElementById('sc1').className='scanl';document.getElementById('sc2').className='scanl';
+    setL('l3','d');log('L3 — Spatial context complete',scenario==='clean'?'lg':'lr');
+  }
+
+  setL('l4','f');log('L4 — Confidence engine: aggregating all layer signals...','lb2');await sleep(350);
+  const arc=234;
+  for(let i=0;i<=s.score;i++){
+    document.getElementById('sn').textContent=i;
+    document.getElementById('sa').style.strokeDashoffset=arc-(arc*(i/100));
+    document.getElementById('sa').style.stroke=i>=60?'#0F9E6E':i>=30?'#E59A1A':'#D93025';
+    await sleep(16);
+  }
+  setL('l4','d');log(`L4 — Confidence score: ${s.score}/100 · ${s.score>=60?'CLEAN INBOUND CONFIRMED':'ALERT — EXCEPTION RAISED'}`,s.score>=60?'lg':'lr');
+
+  const vce=document.getElementById('vc');
+  vce.className='vchip show '+s.vc;
+  document.getElementById('vl').textContent=s.vl;document.getElementById('vd').textContent=s.vd;
+
+  // ─── LAYER 5 — Cruise AI control tower auto-resolution ───
+  setStep(4);setL('l5','f');
+  await sleep(450);
+  if(s.t5==='ticket'){
+    document.getElementById('t5tag').textContent='Exception';document.getElementById('t5tag').className='card-tag';
+    document.getElementById('cruiseEmpty').style.display='none';
+    document.getElementById('cruiseLive').style.display='flex';
+    document.getElementById('t5id').textContent=s.t5ticket;
+    document.getElementById('t5reason').textContent=s.t5reason;
+    document.getElementById('t5a1t').textContent=s.t5call;
+    document.getElementById('t5a2t').textContent=s.t5alert1;
+    document.getElementById('t5a3t').textContent=s.t5alert2;
+    log('L5 — Cruise: exception confirmed · ticket '+s.t5ticket+' opened','lr');
+    await sleep(300);
+    // fire driver call
+    const a1=document.getElementById('t5a1');a1.className='action-item firing';document.getElementById('t5a1s').textContent='dialling';
+    log('L5 — Cruise: auto-call placed to driver (regional-language IVR)','la');
+    await sleep(900);
+    a1.className='action-item done';document.getElementById('t5a1s').textContent='connected';
+    // fire plant manager alert
+    const a2=document.getElementById('t5a2');a2.className='action-item firing';document.getElementById('t5a2s').textContent='sending';
+    await sleep(650);
+    a2.className='action-item done';document.getElementById('t5a2s').textContent='delivered';
+    log('L5 — Cruise: plant manager alerted','la');
+    // fire logistics alert
+    const a3=document.getElementById('t5a3');a3.className='action-item firing';document.getElementById('t5a3s').textContent='sending';
+    await sleep(650);
+    a3.className='action-item done';document.getElementById('t5a3s').textContent='delivered';
+    log('L5 — Cruise: logistics control room alerted · ticket live','la');
+    document.getElementById('cruiseCard').className='card';
+    document.getElementById('t5tag').textContent='Resolving';document.getElementById('t5tag').className='card-tag';
+    setL('l5','d');
+    log('L5 — Cruise: all stakeholders notified · exception being actioned in real time','lr');
+  } else {
+    // clean — no ticket
+    document.getElementById('t5tag').textContent='No action';document.getElementById('t5tag').className='card-tag g';
+    document.getElementById('cruiseEmpty').style.display='none';
+    document.getElementById('cruiseClean').style.display='flex';
+    document.getElementById('t5cleanT').textContent=s.t5title;
+    document.getElementById('t5cleanD').textContent=s.t5desc;
+    setL('l5','d');
+    log('L5 — Cruise: clean delivery · no exception · gate receipt auto-reconciled','lg');
+  }
+
+  document.getElementById('sp').textContent='Complete';document.getElementById('sp').className='status-pill done';
+  log('— Simulation complete · '+s.vl,s.score>=60?'lg':'lr');
+
+  running=false;document.getElementById('rb').disabled=false;document.getElementById('rb').textContent='Run again →';
+}
+
+function sel(sc){
+  scenario=sc;
+  [['bu','clean'],['bi','shrinkage'],['bw','tamper']].forEach(([id,s])=>{
+    document.getElementById(id).className='sc-btn'+(s===sc?' '+SC[s].bc:'');
+  });
+  document.getElementById('rb').textContent='Run simulation →';
+}
+
+initBars();sel('clean');
+const c=document.getElementById('waveCanvas');c.width=c.offsetWidth;
+</script>
+<script>
+// Auto-report height to parent for iframe resize
+// Uses body.offsetHeight (actual rendered height, not scrollable overflow)
+var _rhtimer = null;
+function reportHeight() {
+  clearTimeout(_rhtimer);
+  _rhtimer = setTimeout(function() {
+    var h = document.body.offsetHeight;
+    window.parent.postMessage({ iasHeight: h }, "*");
+  }, 80);
+}
+reportHeight();
+window.addEventListener("resize", reportHeight);
+// Observe only direct children of body to avoid runaway loops
+var obs = new MutationObserver(reportHeight);
+obs.observe(document.body, { childList: true, subtree: false, attributes: false });
+</script>
 </body>
 </html>
