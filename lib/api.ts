@@ -22,32 +22,39 @@ export interface SEOPage {
 
 const LIVE_STATUSES = ["reviewed", "published"];
 
-// ── Slim list: only metadata fields, no full_content/faq_block ──────────────
-// Used by generateStaticParams and the library index page.
-// Response is small (~50-100KB) — safely cacheable.
-// ── getAllPages with retry + jitter ──────────────────────────────────────────
-// Feeds generateStaticParams for [slug] and industry/[slug] — if this returns
-// an empty array, ALL library routes fail to pre-build (dynamicParams: false
-// means they'd 404 in production). Mirrors the getPageBySlug retry pattern
-// below so a transient 429/500 from the backend during a high-concurrency
-// Vercel build doesn't take down the entire site.
-export async function getAllPages(): Promise<SEOPage[]> {
+async function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// ── Bulk full-page cache ─────────────────────────────────────────────────────
+// IMPORTANT (2026-07-03 incident): with 400+ pages, fetching each page
+// individually via `get_page` during static generation means 400+ separate
+// HTTP calls to the backend in a short window — even at concurrency=3 this
+// reliably trips Base44's platform-level rate limiter mid-build (429s that
+// blow through the retry budget and fail the whole build). The backend
+// already exposes `get_all_full_pages`, which returns every published page's
+// FULL content in ONE call. We fetch it exactly once per build (cached in a
+// module-level promise so concurrent callers within the same Node process
+// share it, not re-fetch) and serve every page/slug lookup from memory.
+let _fullPagesCache: Promise<SEOPage[]> | null = null;
+
+async function fetchAllFullPagesWithRetry(): Promise<SEOPage[]> {
   const MAX_RETRIES = 6;
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     try {
       if (attempt > 0) {
         const delay = Math.pow(2, attempt) * 1000 + Math.random() * 500;
-        console.log(`[getAllPages] Retry ${attempt}/${MAX_RETRIES - 1} after ${Math.round(delay)}ms`);
+        console.log(`[getAllFullPages] Retry ${attempt}/${MAX_RETRIES - 1} after ${Math.round(delay)}ms`);
         await sleep(delay);
       }
       const res = await fetch(BACKEND_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "get_slugs" }),
-        next: { revalidate: 60 },
+        body: JSON.stringify({ action: "get_all_full_pages" }),
+        cache: "no-store",
       });
       if (res.status === 429 || res.status === 500 || res.status === 503) {
-        console.warn(`[getAllPages] Got ${res.status}, retrying...`);
+        console.warn(`[getAllFullPages] Got ${res.status}, retrying...`);
         continue;
       }
       if (!res.ok) throw new Error(`Backend returned ${res.status}`);
@@ -56,7 +63,7 @@ export async function getAllPages(): Promise<SEOPage[]> {
       return pages.filter(p => p.slug && p.slug.trim() !== "" && LIVE_STATUSES.includes(p.status || ""));
     } catch (e) {
       if (attempt === MAX_RETRIES - 1) {
-        console.error("[getAllPages] All retries exhausted:", e);
+        console.error("[getAllFullPages] All retries exhausted:", e);
         return [];
       }
     }
@@ -64,50 +71,24 @@ export async function getAllPages(): Promise<SEOPage[]> {
   return [];
 }
 
-// ── Full page by slug: fetches only the one page needed ──────────────────────
-// Used by generateMetadata and the page renderer.
-// Each call fetches ~10-30KB max — no caching issues.
-async function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+function getAllFullPagesCached(): Promise<SEOPage[]> {
+  if (!_fullPagesCache) {
+    _fullPagesCache = fetchAllFullPagesWithRetry();
+  }
+  return _fullPagesCache;
 }
 
-// ── getPageBySlug with retry + jitter ────────────────────────────────────────
-// Next.js uses 1 worker so requests are mostly sequential.
-// Retry with backoff handles transient 429/500 from the backend.
+// ── Slim list: used by generateStaticParams and the library index page. ─────
+// Derived from the same single cached bulk fetch — no separate network call.
+export async function getAllPages(): Promise<SEOPage[]> {
+  return getAllFullPagesCached();
+}
+
+// ── Full page by slug — served from the cached bulk fetch, no per-page call ─
+// Used by generateMetadata and the page renderer.
 export async function getPageBySlug(slug: string): Promise<SEOPage | null> {
-  const MAX_RETRIES = 6;
-  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    try {
-      if (attempt > 0) {
-        // Exponential backoff: 1s, 2s, 4s, 8s, 16s + random jitter
-        const delay = Math.pow(2, attempt) * 1000 + Math.random() * 500;
-        console.log(`[getPageBySlug] Retry ${attempt}/${MAX_RETRIES - 1} for ${slug} after ${Math.round(delay)}ms`);
-        await sleep(delay);
-      }
-      const res = await fetch(BACKEND_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "get_page", slug }),
-        next: { revalidate: 60 },
-      });
-      if (res.status === 429 || res.status === 500 || res.status === 503) {
-        console.warn(`[getPageBySlug] Got ${res.status} for ${slug}, retrying...`);
-        continue;
-      }
-      if (!res.ok) {
-        console.error(`[getPageBySlug] Got ${res.status} for ${slug}, giving up`);
-        return null;
-      }
-      const data = await res.json();
-      return data.page || null;
-    } catch (e) {
-      if (attempt === MAX_RETRIES - 1) {
-        console.error(`[getPageBySlug] All retries exhausted for ${slug}:`, e);
-        return null;
-      }
-    }
-  }
-  return null;
+  const pages = await getAllFullPagesCached();
+  return pages.find(p => p.slug === slug) || null;
 }
 
 export interface DieselReport {
