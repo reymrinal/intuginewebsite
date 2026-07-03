@@ -110,6 +110,60 @@ export async function getPageBySlug(slug: string): Promise<SEOPage | null> {
   return null;
 }
 
+export interface DieselReport {
+  id: string;
+  report_date: string;
+  city_prices: Record<string, number>;
+  avg_diesel_price: number;
+  wow_change_pct: number;
+  crude_oil_price_usd: number;
+  usd_inr_rate: number;
+  km_per_litre_assumption: number;
+  freight_cost_impact_per_km: number;
+  lane_cost_impact: { lane: string; distance_km: number; cost_impact_rs: number }[];
+  cheapest_city: string;
+  costliest_city: string;
+  volatility_score: number | null;
+  narrative: string;
+  faq_block: string;
+  linkedin_post_copy: string;
+  chart_data: { date: string; avg_diesel_price: number }[];
+  sources: string[];
+  status: string;
+  page_slug: string;
+}
+
+const DIESEL_INDEX_BACKEND_URL = "https://rey-6011d59d.base44.app/functions/dieselFreightIndex";
+
+// ── getDieselReport with retry + jitter (mirrors getPageBySlug) ─────────────
+export async function getDieselReport(): Promise<DieselReport | null> {
+  const MAX_RETRIES = 6;
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      if (attempt > 0) {
+        const delay = Math.pow(2, attempt) * 1000 + Math.random() * 500;
+        await sleep(delay);
+      }
+      const res = await fetch(DIESEL_INDEX_BACKEND_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "get_latest" }),
+        next: { revalidate: 3600 },
+      });
+      if (res.status === 429 || res.status === 500 || res.status === 503) continue;
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.ok ? data.report : null;
+    } catch (e) {
+      if (attempt === MAX_RETRIES - 1) {
+        console.error("[getDieselReport] All retries exhausted:", e);
+        return null;
+      }
+    }
+  }
+  return null;
+}
+
 function renderMarkdownTable(tableBlock: string): string {
   const lines = tableBlock.trim().split("\n").filter(l => l.trim());
   if (lines.length < 2) return tableBlock;
