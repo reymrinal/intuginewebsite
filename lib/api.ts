@@ -131,12 +131,21 @@ export interface DieselReport {
   sources: string[];
   status: string;
   page_slug: string;
+  index_score?: number;
+}
+
+export interface CityDelta {
+  city: string;
+  price: number;
+  delta_rs: number;
+  delta_pct: number;
+  is_new: boolean;
 }
 
 const DIESEL_INDEX_BACKEND_URL = "https://rey-6011d59d.base44.app/functions/dieselFreightIndex";
 
 // ── getDieselReport with retry + jitter (mirrors getPageBySlug) ─────────────
-export async function getDieselReport(): Promise<DieselReport | null> {
+export async function getDieselReport(): Promise<{ report: DieselReport; city_deltas: CityDelta[]; previous_report_date: string | null } | null> {
   const MAX_RETRIES = 6;
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     try {
@@ -153,7 +162,7 @@ export async function getDieselReport(): Promise<DieselReport | null> {
       if (res.status === 429 || res.status === 500 || res.status === 503) continue;
       if (!res.ok) return null;
       const data = await res.json();
-      return data.ok ? data.report : null;
+      return data.ok ? { report: data.report, city_deltas: data.city_deltas || [], previous_report_date: data.previous_report_date } : null;
     } catch (e) {
       if (attempt === MAX_RETRIES - 1) {
         console.error("[getDieselReport] All retries exhausted:", e);
