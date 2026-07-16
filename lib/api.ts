@@ -103,7 +103,7 @@ function renderMarkdownTable(tableBlock: string): string {
   const headers = parseRow(lines[0]);
   const rows = lines.slice(2).map(parseRow);
 
-  const headerHtml = headers.map(h => `<th style="padding:0.6rem 1rem;text-align:left;border-bottom:2px solid #e5e7eb;color:#0f2460;font-size:0.85rem;white-space:nowrap">${h}</th>`).join("");
+  const headerHtml = headers.map(h => `<th style="padding:0.6rem 1rem;text-align:left;border-bottom:2px solid #e5e7eb;color:#0f2460;font-size:0.85rem;white-space:normal;word-break:break-word">${h}</th>`).join("");
   const rowsHtml = rows.map(row =>
     `<tr>${row.map(cell => `<td style="padding:0.6rem 1rem;border-bottom:1px solid #f1f5f9;color:#374151;font-size:0.85rem">${cell}</td>`).join("")}</tr>`
   ).join("");

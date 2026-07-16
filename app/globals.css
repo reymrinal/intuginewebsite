@@ -152,6 +152,7 @@ body {
   background: linear-gradient(135deg, #1a3c8f, #0f2460);
 }
 .prose table thead th {
+  word-break: break-word;
   color: #fff;
   font-weight: 700;
   padding: 0.75rem 1rem;
@@ -159,7 +160,7 @@ body {
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  white-space: nowrap;
+
   border: none;
 }
 .prose table tbody tr {
@@ -183,9 +184,10 @@ body {
   line-height: 1.5;
 }
 .prose table tbody td:first-child {
+  word-break: break-word;
   font-weight: 600;
   color: #0f2460;
-  white-space: nowrap;
+
 }
 
 /* Nav mobile responsiveness (added for mobile-friendly hamburger menu) */
