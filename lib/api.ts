@@ -321,7 +321,7 @@ export async function getReportBySlug(slug: string): Promise<Report | null> {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "get_report", slug }),
-        next: { revalidate: 3600 },
+        cache: "no-store",
       });
       if (res.status === 429 || res.status === 500 || res.status === 503) continue;
       if (!res.ok) throw new Error(`Backend returned ${res.status}`);
