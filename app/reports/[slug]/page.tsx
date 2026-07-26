@@ -1,4 +1,4 @@
-/* Rebuild for Monsoon Myth fix: html_content null fix */
+/* Build trigger: Monsoon Myth restructured HTML fix */
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Nav from "@/components/Nav";
