@@ -1,4 +1,4 @@
-/* Build trigger: $(date -u) */
+/* Rebuild for Monsoon Myth fix: html_content null fix */
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Nav from "@/components/Nav";
