@@ -1,3 +1,4 @@
+/* Build trigger: $(date -u) */
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Nav from "@/components/Nav";
