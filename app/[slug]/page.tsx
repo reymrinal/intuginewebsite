@@ -33,11 +33,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const canonical = `${BASE_URL}/${page.slug}`;
   return {
-    title: page.meta_title || page.title,
+    title: (page.meta_title || page.title).replace(/ \| Intugine$/, ""),
     description: page.meta_description,
     alternates: { canonical },
     openGraph: {
-      title: page.meta_title || page.title,
+      title: (page.meta_title || page.title).replace(/ \| Intugine$/, ""),
       description: page.meta_description || "",
       url: canonical,
       type: "article",
@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     },
     twitter: {
       card: "summary_large_image",
-      title: page.meta_title || page.title,
+      title: (page.meta_title || page.title).replace(/ \| Intugine$/, ""),
       description: page.meta_description || "",
     },
     robots: { index: true, follow: true },

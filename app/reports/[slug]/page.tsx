@@ -34,11 +34,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const ogImage = report.og_image_url || report.hero_image_url;
 
   return {
-    title: report.meta_title || report.title,
+    title: (report.meta_title || report.title).replace(/ \| Intugine$/, ""),
     description: report.meta_description || report.summary,
     alternates: { canonical },
     openGraph: {
-      title: report.meta_title || report.title,
+      title: (report.meta_title || report.title).replace(/ \| Intugine$/, ""),
       description: report.meta_description || report.summary || "",
       url: canonical,
       type: "article",
@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     },
     twitter: {
       card: ogImage ? "summary_large_image" : "summary",
-      title: report.meta_title || report.title,
+      title: (report.meta_title || report.title).replace(/ \| Intugine$/, ""),
       description: report.meta_description || report.summary || "",
     },
     robots: { index: true, follow: true },
