@@ -13,6 +13,76 @@
       "source": "/ai-control-tower-intuvizion-logistics-india",
       "destination": "/cruise-ai-control-tower-logistics-india",
       "permanent": true
+    },
+    {
+      "source": "/tms-software-bulk-cement-transport-features",
+      "destination": "/tms-software-bulk-cement-transport",
+      "permanent": true
+    },
+    {
+      "source": "/cement-dispatch-tracking-plant-to-dealer",
+      "destination": "/cement-distribution-tracking-software",
+      "permanent": true
+    },
+    {
+      "source": "/tms-roi-cement-plants-business-case",
+      "destination": "/tms-for-cement-outbound-logistics",
+      "permanent": true
+    },
+    {
+      "source": "/cement-plant-to-dealer-visibility-tracking",
+      "destination": "/cement-plant-logistics-visibility-software",
+      "permanent": true
+    },
+    {
+      "source": "/grey-market-impact-cement-revenue",
+      "destination": "/why-do-cement-companies-lose-revenue-to-grey-market",
+      "permanent": true
+    },
+    {
+      "source": "/cement-transporter-management-system-india",
+      "destination": "/cement-tms-transporter-management",
+      "permanent": true
+    },
+    {
+      "source": "/grey-market-detection-methods-cement-companies",
+      "destination": "/grey-market-detection-cement-india",
+      "permanent": true
+    },
+    {
+      "source": "/how-cement-secondary-distribution-works",
+      "destination": "/what-is-secondary-distribution-cement-india",
+      "permanent": true
+    },
+    {
+      "source": "/iot-unloading-detection-cement-trucks",
+      "destination": "/how-to-detect-short-unloading-cement-trucks",
+      "permanent": true
+    },
+    {
+      "source": "/iot-cement-fleet-tracking-real-time-visibility",
+      "destination": "/cement-iot-fleet-visibility",
+      "permanent": true
+    },
+    {
+      "source": "/iot-vs-gps-tracking-cement-logistics",
+      "destination": "/activity-sensing-vs-gps-tracking-cement-delivery",
+      "permanent": true
+    },
+    {
+      "source": "/how-grey-market-cement-distribution-works",
+      "destination": "/how-to-prevent-grey-market-cement-distribution",
+      "permanent": true
+    },
+    {
+      "source": "/library",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/km",
+      "destination": "/",
+      "permanent": true
     }
   ]
 }
