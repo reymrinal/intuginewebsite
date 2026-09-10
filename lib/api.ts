@@ -93,6 +93,13 @@ export async function getDieselReport(): Promise<{ report: DieselReport; city_de
   return null;
 }
 
+function renderInlineMarkdown(text: string): string {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>');
+}
+
 function renderMarkdownTable(tableBlock: string): string {
   const lines = tableBlock.trim().split("\n").filter(l => l.trim());
   if (lines.length < 2) return tableBlock;
@@ -102,13 +109,18 @@ function renderMarkdownTable(tableBlock: string): string {
 
   const headers = parseRow(lines[0]);
   const rows = lines.slice(2).map(parseRow);
+  const colCount = Math.max(headers.length, 1);
+  // Guard against browsers collapsing a column so narrow that word-break:break-word
+  // wraps it one letter per line. overflow-x:auto on the wrapper handles the resulting
+  // horizontal scroll on mobile instead of letter-wrapping.
+  const minWidthPx = Math.max(colCount * 140, 560);
 
-  const headerHtml = headers.map(h => `<th style="padding:0.6rem 1rem;text-align:left;border-bottom:2px solid #e5e7eb;color:#0f2460;font-size:0.85rem;white-space:normal;word-break:break-word">${h}</th>`).join("");
+  const headerHtml = headers.map(h => `<th style="padding:0.6rem 1rem;text-align:left;border-bottom:2px solid #e5e7eb;color:#0f2460;font-size:0.85rem;white-space:normal;word-break:break-word">${renderInlineMarkdown(h)}</th>`).join("");
   const rowsHtml = rows.map(row =>
-    `<tr>${row.map(cell => `<td style="padding:0.6rem 1rem;border-bottom:1px solid #f1f5f9;color:#374151;font-size:0.85rem">${cell}</td>`).join("")}</tr>`
+    `<tr>${row.map(cell => `<td style="padding:0.6rem 1rem;border-bottom:1px solid #f1f5f9;color:#374151;font-size:0.85rem;white-space:normal;word-break:break-word">${renderInlineMarkdown(cell)}</td>`).join("")}</tr>`
   ).join("");
 
-  return `<div style="overflow-x:auto;margin:1.5rem 0"><table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden"><thead><tr style="background:#f8fafc">${headerHtml}</tr></thead><tbody>${rowsHtml}</tbody></table></div>`;
+  return `<div style="overflow-x:auto;margin:1.5rem 0"><table style="width:100%;min-width:${minWidthPx}px;border-collapse:collapse;background:#fff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden"><thead><tr style="background:#f8fafc">${headerHtml}</tr></thead><tbody>${rowsHtml}</tbody></table></div>`;
 }
 
 export function markdownToHtml(md: string): string {
