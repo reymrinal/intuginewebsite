@@ -3,7 +3,7 @@ import { useState } from "react";
 import PageCard from "@/components/PageCard";
 import type { SEOPage } from "@/lib/api";
 
-const ACTIVE_INDUSTRIES = ["Cement", "Freight Marketplace", "API Suite", "PTL/Courier Tracking", "Metal, Mining & Coal", "Transporter", "Visibility & Tracking", "Express Logistics", "Cruise AI Control Tower"];
+const ACTIVE_INDUSTRIES = ["Cement", "Freight Marketplace", "API Suite", "PTL/Courier Tracking", "Metal, Mining & Coal", "Transporter", "Visibility & Tracking", "Express Logistics", "Cruise AI Control Tower", "Physical AI"];
 
 const INDUSTRY_COLORS: Record<string, string> = {
   "Cement": "#f59e0b",
@@ -15,6 +15,7 @@ const INDUSTRY_COLORS: Record<string, string> = {
   "Visibility & Tracking": "#1a3c8f",
   "Express Logistics": "#dc2626",
   "Cruise AI Control Tower": "#7c3aed",
+  "Physical AI": "#0d9488",
   Default: "#1a3c8f",
 };
 
@@ -28,6 +29,7 @@ const INDUSTRY_ICONS: Record<string, string> = {
   "Visibility & Tracking": "📡",
   "Express Logistics": "⚡",
   "Cruise AI Control Tower": "🧠",
+  "Physical AI": "🛰️",
   Default: "📄",
 };
 
@@ -41,6 +43,7 @@ const INDUSTRY_SLUGS: Record<string, string> = {
   "Visibility & Tracking": "visibility-tracking",
   "Express Logistics": "express-logistics",
   "Cruise AI Control Tower": "cruise-ai-control-tower",
+  "Physical AI": "physical-ai",
 };
 
 export default function LibraryIndex({ pages }: { pages: SEOPage[] }) {

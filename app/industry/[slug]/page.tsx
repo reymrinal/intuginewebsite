@@ -54,6 +54,12 @@ const INDUSTRY_MAP: Record<string, { label: string; icon: string; color: string;
     color: "#1a3c8f",
     description: "India's multimodal supply chain visibility platform — FASTag toll intelligence, SIM-based tracking, GPS, and IoT activity sensing in one unified logistics intelligence stack.",
   },
+  "physical-ai": {
+    label: "Physical AI",
+    icon: "🛰️",
+    color: "#0d9488",
+    description: "Physical AI for logistics — AI that detects, verifies, and reasons about the physical state of freight in motion: activity sensing using sensors, 360 image verification, and AI-classified events for cargo security, theft response, and evidence-grade records.",
+  },
   "cruise-ai-control-tower": {
     label: "Cruise AI Control Tower",
     icon: "🤖",
@@ -73,6 +79,7 @@ const LABEL_TO_SLUG: Record<string, string> = {
   "Visibility & Tracking": "visibility-tracking",
   "Express Logistics": "express-logistics",
   "Cruise AI Control Tower": "cruise-ai-control-tower",
+  "Physical AI": "physical-ai",
 };
 
 export const dynamicParams = false;
