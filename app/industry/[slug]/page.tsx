@@ -66,6 +66,12 @@ const INDUSTRY_MAP: Record<string, { label: string; icon: string; color: string;
     color: "#7c3aed",
     description: "Intugine Cruise — AI Control Tower for Indian freight operations. Autonomous exception detection, AI-powered driver communication via Vedika and Ved, and 3–4 hour advance SLA breach prediction across 50+ exception types.",
   },
+  "ais-140": {
+    label: "AIS-140",
+    icon: "🛡️",
+    color: "#be123c",
+    description: "India's AIS-140 ITS mandate hub — certified Vehicle Location Tracking Devices for public service vehicles, national-permit trucks, and hazmat fleets, with Intugine IAS activity sensing built in: compliance-grade devices that also detect loading, unloading, halts, and tampering with AI confidence scores.",
+  },
 };
 
 // Map industry label in DB to slug
@@ -80,6 +86,7 @@ const LABEL_TO_SLUG: Record<string, string> = {
   "Express Logistics": "express-logistics",
   "Cruise AI Control Tower": "cruise-ai-control-tower",
   "Physical AI": "physical-ai",
+  "AIS-140": "ais-140",
 };
 
 export const dynamicParams = false;
