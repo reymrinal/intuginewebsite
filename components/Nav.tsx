@@ -26,10 +26,11 @@ export default function Nav() {
     openModal({ utmContent: "nav_get_demo", utmCampaign: "library_nav", utmSource: "library" });
   }
 
-  const links = [
+  const links: { href: string; label: string; highlight?: "pink" }[] = [
     { href: "https://library.intugine.com", label: "Library" },
     { href: "https://library.intugine.com/reports", label: "Reports" },
     { href: "https://library.intugine.com/cruise", label: "Cruise" },
+    { href: "https://library.intugine.com/grand-truck-auto", label: "Grand Truck Auto", highlight: "pink" },
     { href: "https://library.intugine.com/roi-calculator", label: "ROI Calculator" },
     { href: "https://library.intugine.com/ias-simulation", label: "IAS" },
   ];
@@ -44,9 +45,17 @@ export default function Nav() {
         </a>
 
         {/* Desktop Nav */}
-        <nav className="nav-desktop" style={{ alignItems: "center", gap: "2rem" }}>
+        <nav className="nav-desktop" style={{ alignItems: "center", gap: "1.35rem" }}>
           {links.map((l) => (
-            <a key={l.href} href={l.href} style={{ color: l.label === "Library" ? "#1a3c8f" : "#374151", textDecoration: "none", fontSize: "0.9rem", fontWeight: l.label === "Library" ? 600 : 500 }}>
+            <a
+              key={l.href}
+              href={l.href}
+              style={
+                l.highlight === "pink"
+                  ? { background: "#ff4f9a", color: "#000", textDecoration: "none", fontSize: "0.85rem", fontWeight: 700, padding: "0.4rem 0.85rem", borderRadius: 6, whiteSpace: "nowrap" }
+                  : { color: l.label === "Library" ? "#1a3c8f" : "#374151", textDecoration: "none", fontSize: "0.9rem", fontWeight: l.label === "Library" ? 600 : 500 }
+              }
+            >
               {l.label}
             </a>
           ))}
@@ -86,7 +95,11 @@ export default function Nav() {
               key={l.href}
               href={l.href}
               onClick={() => setMenuOpen(false)}
-              style={{ color: l.label === "Library" ? "#1a3c8f" : "#374151", textDecoration: "none", fontSize: "0.95rem", fontWeight: l.label === "Library" ? 600 : 500, padding: "0.6rem 0" }}
+              style={
+                l.highlight === "pink"
+                  ? { background: "#ff4f9a", color: "#000", textDecoration: "none", fontSize: "0.9rem", fontWeight: 700, padding: "0.6rem 0.85rem", borderRadius: 6, textAlign: "center" }
+                  : { color: l.label === "Library" ? "#1a3c8f" : "#374151", textDecoration: "none", fontSize: "0.95rem", fontWeight: l.label === "Library" ? 600 : 500, padding: "0.6rem 0" }
+              }
             >
               {l.label}
             </a>
