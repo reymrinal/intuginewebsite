@@ -186,14 +186,20 @@ function honk(st){
  if(st===6){for(let i=0;i<3;i++)tone('square',1050,1000,.07,.05,i*.11);tone('square',880,840,.28,.05,.38)}}
 const sfxHit=()=>{noise(.3,.5,500);tone('sine',120,50,.25,.3)},sfxChai=()=>{tone('triangle',500,1200,.18,.12);tone('triangle',800,1600,.15,.08,.12)},sfxJump=()=>tone('triangle',220,520,.18,.08);
 /* ---------- analytics: hand events up to the library page ---------- */
+const LOG_URL='https://rey-6011d59d.base44.app/functions/logGameEvent';
+let SID='';try{SID=localStorage.getItem('grandtruck-sid')||'';if(!SID){SID=Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem('grandtruck-sid',SID)}}catch(e){}
 function track(name,params){
-  const payload={event:name,params:params||{}};
+  const p2=params||{};
   try{
     if(window.parent&&window.parent!==window){
-      window.parent.postMessage({type:'gta-event',payload:payload},'*');
+      window.parent.postMessage({type:'gta-event',payload:{event:name,params:p2}},'*');
     }else if(typeof window.gtag==='function'){
-      window.gtag('event',name,params||{});
+      window.gtag('event',name,p2);
     }
+  }catch(e){}
+  try{
+    fetch(LOG_URL,{method:'POST',headers:{'Content-Type':'application/json'},keepalive:true,
+      body:JSON.stringify({event:name,mission:p2.mission,seconds:p2.seconds,session_id:SID,page:'/grand-truck-auto'})}).catch(function(){});
   }catch(e){}
 }
 const sfxTick=()=>tone('sine',660,430,.055,.030);
