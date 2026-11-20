@@ -84,5 +84,27 @@
       "destination": "/",
       "permanent": true
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "grandtruckauto.intugine.com"
+        }
+      ],
+      "destination": "/grand-truck-auto.html"
+    },
+    {
+      "source": "/:path((?!grand-truck-auto\\.html).*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "grandtruckauto.intugine.com"
+        }
+      ],
+      "destination": "/grand-truck-auto.html"
+    }
   ]
 }

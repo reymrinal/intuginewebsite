@@ -50,6 +50,7 @@ export default function Nav() {
             <a
               key={l.href}
               href={l.href}
+              {...(l.highlight === "pink" ? { target: "_blank", rel: "noopener noreferrer" } : {})}
               style={
                 l.highlight === "pink"
                   ? { background: "#ff4f9a", color: "#000", textDecoration: "none", fontSize: "0.85rem", fontWeight: 700, padding: "0.4rem 0.85rem", borderRadius: 6, whiteSpace: "nowrap" }
@@ -94,6 +95,7 @@ export default function Nav() {
             <a
               key={l.href}
               href={l.href}
+              {...(l.highlight === "pink" ? { target: "_blank", rel: "noopener noreferrer" } : {})}
               onClick={() => setMenuOpen(false)}
               style={
                 l.highlight === "pink"

@@ -1,5 +1,3 @@
-import Nav from "@/components/Nav";
-
 export const metadata = {
   title: "Grand Truck Auto 6 — The Jelhi–Ranglore Run",
   description:
@@ -15,12 +13,11 @@ export const metadata = {
 
 export default function GrandTruckAutoPage() {
   return (
-    <div style={{ background: "#160a26", minHeight: "100vh" }}>
-      <Nav />
+    <div style={{ margin: 0, padding: 0, height: "100dvh", overflow: "hidden", background: "#160a26" }}>
       <iframe
         src="/grand-truck-auto.html"
         title="Grand Truck Auto 6 — playable game"
-        style={{ width: "100%", height: "calc(100vh - 64px)", border: "none", display: "block" }}
+        style={{ width: "100%", height: "100%", border: "none", display: "block" }}
         allow="autoplay; fullscreen"
       />
     </div>
