@@ -1,7 +1,7 @@
 import Nav from "@/components/Nav";
 
 export const metadata = {
-  title: "Grand Truck Auto 6 — The Jelhi–Ranglore Run | Intugine",
+  title: "Grand Truck Auto 6 — The Jelhi–Ranglore Run",
   description:
     "Drive the Jelhi–Ranglore expressway with Intugine. Activity sensing, shipment integrity and IntuTrack 2.0 radar, played as a game.",
   alternates: { canonical: "https://library.intugine.com/grand-truck-auto" },
