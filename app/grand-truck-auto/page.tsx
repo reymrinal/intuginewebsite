@@ -1,3 +1,5 @@
+import GrandTruckAnalytics from "@/components/GrandTruckAnalytics";
+
 export const metadata = {
   title: "Grand Truck Auto 6 — The Jelhi–Ranglore Run",
   description:
@@ -14,6 +16,7 @@ export const metadata = {
 export default function GrandTruckAutoPage() {
   return (
     <div style={{ margin: 0, padding: 0, height: "100dvh", overflow: "hidden", background: "#160a26" }}>
+      <GrandTruckAnalytics />
       <iframe
         src="/grand-truck-auto.html"
         title="Grand Truck Auto 6 — playable game"
